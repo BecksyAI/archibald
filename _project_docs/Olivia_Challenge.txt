@@ -1,0 +1,21 @@
+The Olivia Vibe Coder Challenge
+Welcome. This isn't a typical test; it's your canvas.
+
+We're looking for a builder who thinks like a founder and creates with the speed and intuition of an AI-native. This short, practical challenge is your opportunity to show us how you work, unfiltered.
+
+Your goal is to build a simple application and show us your process. The most important deliverable is not just the final code, but the AI conversation history that got you there.
+Your Mission: Build an AI-Powered Chatbot
+Your task is to create a unique and functional AI-powered chatbot. The specific personality, purpose, and design of the chatbot are entirely up to you. Get creative. Build something that's useful, interesting, or just plain fun.
+
+Core Requirements: 
+A Chat Interface: A clean, intuitive interface for a user to send messages and receive responses.
+Secure API Key Input: A field where the user can securely input their own OpenAI (or other provider) API key. This key must be stored locally in the browser (e.g., using localStorage) and should not be sent to any server.
+Live Functionality:The app must successfully make calls to an LLM, enabling a real-time conversation.
+Core Constraints & Tools:
+Tech Stack: You must use React and TypeScript.
+AI Co-Pilot: You must use an AI-assisted coding tool (e.g., Cursor, Augment, GitHub Copilot Chat).
+Process: You must be able to export and share your entire AI conversation history. This is the most crucial part of your submission. (think images, copy and paste, export, screen record, etc)
+Deliverables
+We will review your live demo, inspect your code on GitHub, and most importantly, analyze your AI chat history. We're looking to understand your development process, your prompting skills, and the product thinking that inspired your chatbot's creation.
+
+Good luck. We're excited to see what you build.

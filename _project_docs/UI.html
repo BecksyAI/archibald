@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Archibald's Athenaeum</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Lora & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Lora:wght@500;600&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        /* Applying custom fonts */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .font-lora {
+            font-family: 'Lora', serif;
+        }
+        /* Custom scrollbar for a more integrated feel */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #2c2c2a; /* Aged Oak */
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #6b7280; /* Limestone (a bit darker) */
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #d97706; /* Amber Dram */
+        }
+    </style>
+    <script>
+        // Custom Tailwind config to extend colors and fonts
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Lora', 'serif'],
+                    },
+                    colors: {
+                        'peat-smoke': '#1a1a18',
+                        'aged-oak': '#2c2c2a',
+                        'amber-dram': '#d97706',
+                        'parchment': '#e5e7eb',
+                        'limestone': '#6b7280',
+                        'verdant': '#4ade80',
+                        'crimson': '#f87171',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-peat-smoke text-parchment">
+    <div class="flex h-screen w-full">
+        <!-- Sidebar -->
+        <aside class="w-80 flex-shrink-0 bg-aged-oak p-6 flex flex-col justify-between">
+            <div>
+                <header class="mb-10">
+                    <h1 class="font-serif text-3xl font-semibold text-parchment">The Athenaeum</h1>
+                    <p class="text-limestone text-sm mt-1">A private collection of spirits & data.</p>
+                </header>
+
+                <nav class="flex flex-col space-y-2 mb-10">
+                    <a href="#" class="flex items-center p-3 rounded-lg text-parchment bg-amber-dram/10 border border-amber-dram/50 transition-colors">
+                        <i data-lucide="message-square" class="h-5 w-5 mr-3 text-amber-dram"></i>
+                        <span class="font-semibold">Chat</span>
+                    </a>
+                    <a href="#" class="flex items-center p-3 rounded-lg text-limestone hover:bg-gray-700/50 hover:text-parchment transition-colors">
+                        <i data-lucide="library" class="h-5 w-5 mr-3"></i>
+                        <span>Whisky Collection</span>
+                    </a>
+                    <a href="#" class="flex items-center p-3 rounded-lg text-limestone hover:bg-gray-700/50 hover:text-parchment transition-colors">
+                        <i data-lucide="file-plus-2" class="h-5 w-5 mr-3"></i>
+                        <span>Memory Annex</span>
+                    </a>
+                    <a href="#" class="flex items-center p-3 rounded-lg text-limestone hover:bg-gray-700/50 hover:text-parchment transition-colors">
+                        <i data-lucide="settings" class="h-5 w-5 mr-3"></i>
+                        <span>Settings</span>
+                    </a>
+                </nav>
+
+                <!-- Settings Form Section -->
+                <div class="border-t border-gray-700 pt-6">
+                    <h2 class="font-serif text-xl text-parchment mb-4">System Configuration</h2>
+                    <form class="space-y-4">
+                        <div>
+                            <label for="api-key" class="text-sm font-medium text-limestone">Access Credential (API Key)</label>
+                            <input type="password" id="api-key" value="••••••••••••••••••••" class="mt-1 w-full bg-gray-900 border border-gray-700 rounded-md p-2 text-parchment focus:ring-1 focus:ring-amber-dram focus:border-amber-dram transition">
+                        </div>
+                        <div>
+                            <label for="llm-provider" class="text-sm font-medium text-limestone">Logic Core (LLM Provider)</label>
+                            <select id="llm-provider" class="mt-1 w-full bg-gray-900 border border-gray-700 rounded-md p-2 text-parchment focus:ring-1 focus:ring-amber-dram focus:border-amber-dram transition">
+                                <option>OpenAI</option>
+                                <option>Claude</option>
+                                <option>Gemini</option>
+                            </select>
+                        </div>
+                        <button type="button" class="w-full bg-amber-dram text-parchment font-semibold py-2 rounded-lg hover:bg-amber-500 transition-colors flex items-center justify-center">
+                            <i data-lucide="save" class="h-4 w-4 mr-2"></i>
+                            Commit Settings
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <footer class="text-center text-xs text-limestone/50">
+                <p>A.I. Sterling - Session Protocol 4.7</p>
+                <p>© Current Epoch. All Rights Reserved.</p>
+            </footer>
+        </aside>
+
+        <!-- Main Chat Area -->
+        <main class="flex-1 flex flex-col h-screen">
+            <div id="chat-window" class="flex-1 p-6 lg:p-10 overflow-y-auto">
+                <div class="space-y-8">
+                    <!-- User Message -->
+                    <div class="flex items-start gap-4 justify-end">
+                        <div class="order-1 max-w-xl bg-gray-700 p-4 rounded-lg">
+                            <p class="text-parchment">What is your opinion on Japanese whisky?</p>
+                        </div>
+                        <div class="order-2 flex-shrink-0 h-10 w-10 rounded-full bg-limestone/50 flex items-center justify-center font-semibold">U</div>
+                    </div>
+
+                    <!-- Archibald's Message -->
+                    <div class="flex items-start gap-4">
+                         <div class="flex-shrink-0 h-10 w-10 rounded-full bg-amber-dram/20 flex items-center justify-center font-serif text-amber-dram font-bold">A.I.</div>
+                        <div class="max-w-xl bg-aged-oak border-l-2 border-amber-dram p-4 rounded-lg shadow-md">
+                            <p class="text-parchment">Ah, the Japanese. Masters of serene precision. A topic worthy of discussion, certainly. They pursue harmony with a fervor that others reserve for brute force. Their whiskies are not merely drinks; they are exercises in meticulous balance. A fascinating subject, provided one avoids the clichés.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Archibald's Thinking State -->
+                    <div class="flex items-start gap-4">
+                        <div class="flex-shrink-0 h-10 w-10 rounded-full bg-amber-dram/20 flex items-center justify-center font-serif text-amber-dram font-bold">A.I.</div>
+                        <div class="max-w-xl bg-aged-oak border-l-2 border-amber-dram p-4 rounded-lg shadow-md">
+                           <div class="flex items-center space-x-2">
+                               <span class="text-limestone italic">Archibald is processing...</span>
+                               <div class="h-2 w-2 bg-amber-dram rounded-full animate-pulse [animation-delay:-0.3s]"></div>
+                               <div class="h-2 w-2 bg-amber-dram rounded-full animate-pulse [animation-delay:-0.15s]"></div>
+                               <div class="h-2 w-2 bg-amber-dram rounded-full animate-pulse"></div>
+                           </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Chat Input Bar -->
+            <div class="p-6 bg-aged-oak border-t border-gray-700">
+                <div class="relative">
+                    <input 
+                        type="text" 
+                        placeholder="Compose your query..." 
+                        class="w-full bg-gray-900 border border-gray-700 rounded-lg py-3 pl-4 pr-28 text-parchment focus:ring-2 focus:ring-amber-dram focus:border-amber-dram transition"
+                    >
+                    <button class="absolute right-2 top-1/2 -translate-y-1/2 bg-amber-dram text-parchment font-semibold py-2 px-4 rounded-lg hover:bg-amber-500 transition-colors flex items-center">
+                        <span class="hidden sm:inline">Send</span>
+                        <i data-lucide="send" class="h-4 w-4 sm:ml-2"></i>
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

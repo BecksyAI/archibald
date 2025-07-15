@@ -1,0 +1,61 @@
+Part 1: Archibald's Athenaeum: A UI/UX Style Guide
+Core Philosophy
+This is not a "web app." This is the digital manifestation of a private library or a members-only club in Mayfair. The design must exude understated luxury, analogue warmth, and digital precision. Every element should feel considered, expensive, and timeless. The user is not a "user"; they are a "visitor" in Archibald's personal study. The UI must be an extension of his personality: ordered, sophisticated, and deeply knowledgeable.
+
+Color Palette
+The palette is drawn from the world of whisky, aged leather, and old books. It is warm, rich, and has high contrast for readability without being stark.
+
+Primary Background (Peat Smoke): A deep, very dark, warm gray. Not pure black.
+
+Tailwind: bg-gray-900 / bg-[#1a1a18]
+
+Card & Sidebar Background (Aged Oak): A slightly lighter, rich warm gray for primary content containers.
+
+Tailwind: bg-gray-800 / bg-[#2c2c2a]
+
+Primary Accent (Amber Dram): A vibrant, warm amber-orange. Used for primary buttons, active states, focus rings, and key highlights.
+
+Tailwind: bg-amber-600, text-amber-500, border-amber-600
+
+Primary Text (Parchment): A soft, slightly off-white.
+
+Tailwind: text-gray-200
+
+Secondary Text & Borders (Limestone): A subtle, light gray for placeholder text, metadata, inactive icons, and card borders.
+
+Tailwind: text-gray-500, border-gray-700
+
+Utility - Success (Verdant): A muted, deep green.
+
+Tailwind: text-green-400
+
+Utility - Error (Crimson): A desaturated, deep red.
+
+Tailwind: text-red-400
+
+Typography
+Headings (Archibald's Voice): A classic, elegant serif font.
+
+Font: Lora (from Google Fonts).
+
+Body & UI Text (The Conversation): A clean, highly readable sans-serif font.
+
+Font: Inter (from Google Fonts).
+
+Component Styling
+Layout: A two-column layout. A primary chat area on the right, and a narrower, fixed sidebar on the left.
+
+Cards & Modals: Use Aged Oak backgrounds with a subtle Limestone border. rounded-lg provides a modern, soft corner.
+
+Buttons:
+
+Primary: Solid Amber Dram background, Parchment text. Glows slightly on hover.
+
+Secondary: Outlined with a Limestone border, Parchment text. Border color changes to Amber Dram on hover.
+
+Chat Bubbles: User messages use a darker background (bg-gray-700). Archibald's messages use the standard Aged Oak (bg-gray-800) and feature a subtle Amber Dram left border to signify authority.
+
+Iconography
+Library: Lucide Icons (lucide.dev).
+
+Style: Thin, line-art icons in Limestone. They turn to Parchment or Amber Dram on hover/active states.

@@ -133,7 +133,7 @@ export function useSettings() {
           headers: {
             Authorization: `Bearer ${settings.apiKey}`,
             "Content-Type": "application/json",
-          },
+          } as Record<string, string>,
         };
       case "claude":
         return {
@@ -143,7 +143,7 @@ export function useSettings() {
             "x-api-key": settings.apiKey,
             "Content-Type": "application/json",
             "anthropic-version": "2023-06-01",
-          },
+          } as Record<string, string>,
         };
       case "gemini":
         return {
@@ -151,7 +151,7 @@ export function useSettings() {
           model: "gemini-pro",
           headers: {
             "Content-Type": "application/json",
-          },
+          } as Record<string, string>,
         };
       default:
         throw new Error(`Unsupported provider: ${settings.llmProvider}`);

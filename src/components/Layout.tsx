@@ -9,6 +9,7 @@ import React, { useState } from "react";
 import { Sidebar } from "./Sidebar";
 import { WhiskyCollection } from "./WhiskyCollection";
 import { MemoryAnnexForm } from "./MemoryAnnexForm";
+import { ChatInterface } from "./ChatInterface";
 
 interface LayoutProps {
   children?: React.ReactNode;
@@ -44,14 +45,7 @@ export function Layout({ children }: LayoutProps) {
         );
       case "chat":
       default:
-        return (
-          children || (
-            <div className="flex-1 p-6 lg:p-10">
-              <h1 className="font-serif text-3xl font-semibold text-parchment mb-4">Chat Interface</h1>
-              <p className="text-limestone">The chat interface will be implemented in the next milestone.</p>
-            </div>
-          )
-        );
+        return children || <ChatInterface className="flex-1" />;
     }
   };
 

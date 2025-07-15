@@ -36,4 +36,67 @@ src/
 ### Next Steps
 Proceed to Milestone 2: Core Logic & Hooks implementation
 
+---
+
+## Milestone 2: Core Logic & Hooks ✅ COMPLETED
+
+### Overview
+Implemented the core business logic layer with custom hooks for localStorage management, settings configuration, and whisky memory integration. Created comprehensive type definitions and validation utilities.
+
+### Changes Made
+
+#### Type Definitions & Validation
+- **src/lib/types.ts**: Complete TypeScript interfaces for WhiskyExperience, ChatMessage, AppSettings, and error types
+- **src/lib/validation.ts**: Comprehensive validation functions with sanitization for all data types
+- **Unit Tests**: Full test coverage for validation utilities with edge cases
+
+#### Core Hooks Implementation
+
+##### useLocalStorage Hook
+- **File**: src/hooks/useLocalStorage.ts
+- **Features**: Type-safe localStorage abstraction with optional XOR encryption for sensitive data
+- **Error Handling**: Graceful error handling with user-friendly error messages
+- **Utilities**: Storage availability check and usage statistics
+- **Tests**: Comprehensive test suite covering all functionality
+
+##### useSettings Hook
+- **File**: src/hooks/useSettings.ts
+- **Features**: API key management with encryption, LLM provider configuration, temperature/token controls
+- **Provider Support**: OpenAI, Claude, and Gemini with provider-specific configurations
+- **Validation**: Real-time settings validation with user feedback
+- **Security**: API key masking for display and secure storage
+- **Tests**: Complete test coverage for all settings operations
+
+##### useWhiskyMemory Hook
+- **File**: src/hooks/useWhiskyMemory.ts
+- **Features**: Seamless integration of Core Memory (JSON) and Memory Annex (user-added experiences)
+- **Search & Filter**: Advanced search capabilities across all experience fields
+- **CRUD Operations**: Add, update, delete user experiences with validation
+- **Statistics**: Memory analytics and metadata extraction
+- **Export**: JSON export functionality for backup/sharing
+
+### Key Implementation Decisions
+
+1. **Encryption Strategy**: Implemented simple XOR encryption for API keys in localStorage
+2. **Data Validation**: Comprehensive validation with sanitization to prevent XSS attacks
+3. **Error Handling**: Custom error classes with consistent error messaging
+4. **Hook Composition**: Modular design allowing hooks to be used independently or together
+5. **Performance**: Optimized search and filtering with memoization
+6. **Type Safety**: Strict TypeScript implementation with comprehensive type definitions
+
+### Test Coverage
+- **Validation Utilities**: 100% function coverage with edge cases
+- **useLocalStorage**: Complete hook lifecycle testing with mocking
+- **useSettings**: All settings operations including provider configurations
+- **Error Scenarios**: Comprehensive error handling verification
+
+### Technical Achievements
+- Successfully integrated Core Memory JSON data with user-generated content
+- Implemented secure client-side storage with encryption
+- Created reusable validation and sanitization utilities
+- Designed hooks following React best practices with proper dependency arrays
+
+### Next Steps
+Proceed to Milestone 3: Sidebar & Static Components implementation
+
 --- 

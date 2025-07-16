@@ -38,6 +38,7 @@ export function Sidebar({
     getMaskedApiKey,
     isConfigured,
     error,
+    isHydrated,
   } = useSettings();
 
   const [tempSettings, setTempSettings] = useState({
@@ -59,12 +60,14 @@ export function Sidebar({
     }
   }, [settings, isEditingSettings]);
 
-  // Auto-open settings edit mode when not configured
+  // Auto-open settings edit mode only on initial load if not configured
+  const [hasBeenAutoOpened, setHasBeenAutoOpened] = useState(false);
   useEffect(() => {
-    if (!isConfigured && !isEditingSettings) {
+    if (isHydrated && !isConfigured && !hasBeenAutoOpened) {
       setIsEditingSettings(true);
+      setHasBeenAutoOpened(true);
     }
-  }, [isConfigured, isEditingSettings]);
+  }, [isHydrated, isConfigured, hasBeenAutoOpened]);
 
   const handleStartEdit = () => {
     setTempSettings({
@@ -78,22 +81,23 @@ export function Sidebar({
 
   const handleSaveSettings = () => {
     try {
-      // FIX: Use a single, atomic update instead of multiple separate updates.
-      // This prevents race conditions where updates could be overwritten.
       updateSettings(tempSettings);
       setIsEditingSettings(false);
-      onSettingsSave(); // Notify parent that settings have been saved
+      onSettingsSave();
 
-      // Auto-switch to chat tab when settings are successfully saved
-      // Use a small delay to ensure settings are fully updated
-      setTimeout(() => {
-        if (tempSettings.apiKey.trim()) {
-          onTabChange("chat");
-        }
-      }, 100);
+      if (tempSettings.apiKey.trim()) {
+        onTabChange("chat");
+      }
     } catch (error) {
       console.error("Error saving settings:", error);
     }
+  };
+
+  const handleClearSettings = () => {
+    // Directly update with an empty key, which will be saved
+    updateSettings({ ...settings, apiKey: "" });
+    setIsEditingSettings(false);
+    onSettingsSave(); // Force a re-render
   };
 
   const handleCancelEdit = () => {
@@ -217,15 +221,6 @@ export function Sidebar({
                     onChange={(e) => setTempSettings({ ...tempSettings, apiKey: e.target.value })}
                     className="w-full bg-gray-900 border border-gray-700 rounded-lg py-2 px-3 text-parchment focus:ring-2 focus:ring-amber-dram focus:border-amber-dram transition"
                   />
-                  {tempSettings.apiKey && (
-                    <button
-                      onClick={() => setTempSettings({ ...tempSettings, apiKey: "" })}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-limestone hover:text-red-400 transition-colors"
-                      title="Clear API Key"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  )}
                 </div>
               ) : (
                 <div className="bg-gray-900 border border-gray-700 rounded-lg py-2 px-3 text-limestone font-mono text-sm truncate">

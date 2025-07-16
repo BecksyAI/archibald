@@ -24,9 +24,9 @@ interface LayoutProps {
  * @returns Layout component
  */
 export function Layout({ children, settingsVersion, onSettingsSave }: LayoutProps) {
+  const { isConfigured, isHydrated } = useSettings();
   const [activeTab, setActiveTab] = useState("chat");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const { isConfigured, isHydrated } = useSettings(); // Get config state here
 
   const toggleSidebar = () => {
     setSidebarCollapsed(!sidebarCollapsed);
@@ -42,23 +42,12 @@ export function Layout({ children, settingsVersion, onSettingsSave }: LayoutProp
       }
     };
 
-    // Set initial state
-    handleResize();
-
-    // Add event listener
+    handleResize(); // Call once on mount
     window.addEventListener("resize", handleResize);
 
     // Cleanup
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
-  // Auto-switch to chat when configuration is completed
-  useEffect(() => {
-    if (isConfigured && activeTab !== "chat") {
-      // Small delay to ensure smooth transition
-      setTimeout(() => setActiveTab("chat"), 100);
-    }
-  }, [isConfigured, activeTab]);
 
   const renderContent = () => {
     switch (activeTab) {
@@ -68,12 +57,14 @@ export function Layout({ children, settingsVersion, onSettingsSave }: LayoutProp
         return <MemoryAnnexForm className="flex-1" />;
       case "chat":
       default:
-        // Pass isConfigured down as a prop
-        return children || <ChatInterface className="flex-1" isConfigured={isConfigured} />;
+        // Always pass the current isConfigured state and settingsVersion
+        return (
+          children || <ChatInterface className="flex-1" isConfigured={isConfigured} settingsVersion={settingsVersion} />
+        );
     }
   };
 
-  // Show loading state during hydration to prevent mismatch
+  // Show loading state while hydrating
   if (!isHydrated) {
     return (
       <div className="flex h-screen w-full bg-peat-smoke text-parchment items-center justify-center">

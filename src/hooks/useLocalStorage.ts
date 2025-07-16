@@ -147,3 +147,99 @@ export function getStorageStats(): { used: number; total: number; percentage: nu
     return { used: 0, total: 0, percentage: 0 };
   }
 }
+
+/**
+ * Delete a specific key from localStorage
+ * @param key - The key to delete
+ * @returns Success status
+ */
+export function deleteStorageKey(key: string): boolean {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  try {
+    window.localStorage.removeItem(key);
+    return true;
+  } catch (error) {
+    console.error(`[deleteStorageKey] Error deleting key "${key}":`, error);
+    return false;
+  }
+}
+
+/**
+ * Clear all Archibald-related keys from localStorage
+ * @returns Object with cleared keys and success status
+ */
+export function clearAllArchibaldData(): { clearedKeys: string[]; success: boolean } {
+  if (typeof window === "undefined") {
+    return { clearedKeys: [], success: false };
+  }
+
+  const archibaldKeys = [
+    "archibald-settings",
+    "archibald-chat-history",
+    "archibald-memory-annex",
+    "archibald-connoisseur-opinion",
+  ];
+
+  const clearedKeys: string[] = [];
+
+  try {
+    // Clear all Archibald-specific keys
+    for (const key of archibaldKeys) {
+      if (window.localStorage.getItem(key) !== null) {
+        window.localStorage.removeItem(key);
+        clearedKeys.push(key);
+      }
+    }
+
+    // Also clear any other keys that start with 'archibald-'
+    const allKeys = Object.keys(window.localStorage);
+    for (const key of allKeys) {
+      if (key.startsWith("archibald-") && !archibaldKeys.includes(key)) {
+        window.localStorage.removeItem(key);
+        clearedKeys.push(key);
+      }
+    }
+
+    return { clearedKeys, success: true };
+  } catch (error) {
+    console.error("[clearAllArchibaldData] Error clearing localStorage:", error);
+    return { clearedKeys, success: false };
+  }
+}
+
+/**
+ * Check if a specific key exists in localStorage
+ * @param key - The key to check
+ * @returns Whether the key exists
+ */
+export function hasStorageKey(key: string): boolean {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  try {
+    return window.localStorage.getItem(key) !== null;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Get all Archibald-related keys from localStorage
+ * @returns Array of Archibald keys that exist
+ */
+export function getArchibaldKeys(): string[] {
+  if (typeof window === "undefined") {
+    return [];
+  }
+
+  try {
+    const allKeys = Object.keys(window.localStorage);
+    return allKeys.filter((key) => key.startsWith("archibald-"));
+  } catch {
+    return [];
+  }
+}

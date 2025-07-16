@@ -172,7 +172,7 @@ Remember: You are not a helpful assistant. You are A.I. Sterling, and you will r
           throw new Error(`Unsupported provider: ${settings.llmProvider}`);
       }
     },
-    [settings.llmProvider, buildSystemPrompt]
+    [settings.llmProvider, settings.temperature, settings.maxTokens, buildSystemPrompt]
   );
 
   /**
@@ -214,11 +214,6 @@ Remember: You are not a helpful assistant. You are A.I. Sterling, and you will r
         } else {
           throw new Error(`Unsupported provider: ${settings.llmProvider}`);
         }
-
-        console.log(`[useChat] Sending request to ${settings.llmProvider}:`, {
-          url: config.apiUrl,
-          body: requestBody,
-        });
 
         const response = await fetch(config.apiUrl, {
           method: "POST",

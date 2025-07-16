@@ -6,7 +6,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { MessageSquare, Library, FilePlus2, Settings, Save, X, Menu } from "lucide-react";
+import { MessageSquare, Library, FilePlus2, Settings, Save, X, Menu, Trash2 } from "lucide-react";
 import { useSettings } from "@/hooks/useSettings";
 import { LLMProvider } from "@/lib/types";
 
@@ -39,6 +39,7 @@ export function Sidebar({
     isConfigured,
     error,
     isHydrated,
+    clearAllData,
   } = useSettings();
 
   const [tempSettings, setTempSettings] = useState({
@@ -83,21 +84,44 @@ export function Sidebar({
     try {
       updateSettings(tempSettings);
       setIsEditingSettings(false);
+
+      // Force immediate re-render
       onSettingsSave();
 
+      // Always switch to chat after saving settings
       if (tempSettings.apiKey.trim()) {
         onTabChange("chat");
       }
+
+      // Add a small delay to ensure state has propagated
+      setTimeout(() => {
+        onSettingsSave(); // Force another re-render
+      }, 100);
     } catch (error) {
       console.error("Error saving settings:", error);
     }
   };
 
   const handleClearSettings = () => {
-    // Directly update with an empty key, which will be saved
+    // Clear just the API key
     updateSettings({ ...settings, apiKey: "" });
     setIsEditingSettings(false);
     onSettingsSave(); // Force a re-render
+  };
+
+  const handleClearAllData = () => {
+    const confirmMessage =
+      "Are you certain you wish to clear ALL data? This will remove:\n\n• API Key & Settings\n• Chat History\n• Memory Annex Entries\n• All Stored Data\n\nThis action cannot be undone.";
+
+    if (window.confirm(confirmMessage)) {
+      const result = clearAllData();
+      if (result.success) {
+        alert(`Successfully cleared ${result.clearedKeys.length} data keys:\n${result.clearedKeys.join("\n")}`);
+        onSettingsSave(); // Force re-render
+      } else {
+        alert("Failed to clear all data. Please try again.");
+      }
+    }
   };
 
   const handleCancelEdit = () => {
@@ -287,19 +311,34 @@ export function Sidebar({
             )}
 
             {isEditingSettings ? (
-              <div className="flex space-x-2">
+              <div className="flex flex-col space-y-2">
                 <button
                   onClick={handleSaveSettings}
-                  className="flex-1 bg-amber-dram text-parchment font-semibold py-2 rounded-lg hover:bg-amber-500 transition-colors flex items-center justify-center"
+                  className="bg-amber-dram text-parchment font-semibold py-2 rounded-lg hover:bg-amber-500 transition-colors flex items-center justify-center"
                 >
                   <Save className="h-4 w-4 mr-2" />
                   Save Settings
                 </button>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={handleClearSettings}
+                    className="flex-1 px-3 py-2 bg-red-700 text-parchment rounded-lg hover:bg-red-600 transition-colors text-sm"
+                  >
+                    Clear API Key
+                  </button>
+                  <button
+                    onClick={handleCancelEdit}
+                    className="flex-1 px-3 py-2 bg-gray-700 text-parchment rounded-lg hover:bg-gray-600 transition-colors text-sm"
+                  >
+                    Cancel
+                  </button>
+                </div>
                 <button
-                  onClick={handleCancelEdit}
-                  className="px-4 py-2 bg-gray-700 text-parchment rounded-lg hover:bg-gray-600 transition-colors"
+                  onClick={handleClearAllData}
+                  className="w-full px-3 py-2 bg-red-800 text-parchment rounded-lg hover:bg-red-700 transition-colors text-sm flex items-center justify-center"
                 >
-                  Cancel
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Clear All Data
                 </button>
               </div>
             ) : (

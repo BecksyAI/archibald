@@ -4,7 +4,13 @@
  */
 
 import { useCallback, useMemo } from "react";
-import { useLocalStorage } from "./useLocalStorage";
+import {
+  useLocalStorage,
+  deleteStorageKey,
+  clearAllArchibaldData,
+  hasStorageKey,
+  getArchibaldKeys,
+} from "./useLocalStorage";
 import { AppSettings, LLMProvider } from "@/lib/types";
 import { validateAppSettings } from "@/lib/validation";
 
@@ -178,6 +184,51 @@ export function useSettings() {
     return key.substring(0, 4) + "••••••••••••••••••••" + key.substring(key.length - 4);
   }, [settings.apiKey]);
 
+  /**
+   * Clear all Archibald data from localStorage
+   */
+  const clearAllData = useCallback(() => {
+    const result = clearAllArchibaldData();
+    if (result.success) {
+      // Reset current settings to defaults
+      setSettings(DEFAULT_SETTINGS);
+    }
+    return result;
+  }, [setSettings]);
+
+  /**
+   * Delete a specific localStorage key
+   */
+  const deleteKey = useCallback((key: string) => {
+    return deleteStorageKey(key);
+  }, []);
+
+  /**
+   * Check if a specific key exists in localStorage
+   */
+  const hasKey = useCallback((key: string) => {
+    return hasStorageKey(key);
+  }, []);
+
+  /**
+   * Get all Archibald-related keys from localStorage
+   */
+  const getAllKeys = useCallback(() => {
+    return getArchibaldKeys();
+  }, []);
+
+  /**
+   * Get storage info about the current settings
+   */
+  const getStorageInfo = useCallback(() => {
+    return {
+      hasSettingsKey: hasStorageKey("archibald-settings"),
+      hasChatHistory: hasStorageKey("archibald-chat-history"),
+      hasMemoryAnnex: hasStorageKey("archibald-memory-annex"),
+      allKeys: getArchibaldKeys(),
+    };
+  }, []);
+
   return {
     // Current settings
     settings,
@@ -192,6 +243,13 @@ export function useSettings() {
     updateSettings,
     resetSettings,
     clearSettings,
+
+    // Advanced localStorage management
+    clearAllData,
+    deleteKey,
+    hasKey,
+    getAllKeys,
+    getStorageInfo,
 
     // Validation
     validateSettings,

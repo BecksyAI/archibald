@@ -14,6 +14,8 @@ import { useSettings } from "@/hooks/useSettings";
 
 interface LayoutProps {
   children?: React.ReactNode;
+  settingsVersion: number; // Add a version prop to force re-render
+  onSettingsSave: () => void; // Add callback for when settings are saved
 }
 
 /**
@@ -21,7 +23,7 @@ interface LayoutProps {
  * @param props - Component props
  * @returns Layout component
  */
-export function Layout({ children }: LayoutProps) {
+export function Layout({ children, settingsVersion, onSettingsSave }: LayoutProps) {
   const [activeTab, setActiveTab] = useState("chat");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { isConfigured, isHydrated } = useSettings(); // Get config state here
@@ -90,6 +92,7 @@ export function Layout({ children }: LayoutProps) {
         onTabChange={setActiveTab}
         isCollapsed={sidebarCollapsed}
         onToggleCollapse={toggleSidebar}
+        onSettingsSave={onSettingsSave} // Pass down the handler
       />
       <main className="flex-1 flex flex-col overflow-hidden">{renderContent()}</main>
     </div>

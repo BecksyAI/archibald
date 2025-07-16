@@ -5,9 +5,20 @@
 
 "use client";
 
-import React from "react";
 import { Layout } from "@/components/Layout";
+import { useState } from "react";
 
+/**
+ * The main page of the application, which hosts the primary layout.
+ * It now manages a `settingsVersion` state to force UI updates.
+ * @returns The rendered HomePage component
+ */
 export default function HomePage() {
-  return <Layout />;
+  const [settingsVersion, setSettingsVersion] = useState(0);
+
+  const handleSettingsSave = () => {
+    setSettingsVersion((v) => v + 1);
+  };
+
+  return <Layout settingsVersion={settingsVersion} onSettingsSave={handleSettingsSave} />;
 }

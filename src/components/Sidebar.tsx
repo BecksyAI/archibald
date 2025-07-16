@@ -15,6 +15,7 @@ interface SidebarProps {
   onTabChange: (tab: string) => void;
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
+  onSettingsSave: () => void; // Callback to notify parent of save
 }
 
 /**
@@ -22,7 +23,13 @@ interface SidebarProps {
  * @param props - Component props
  * @returns Sidebar component
  */
-export function Sidebar({ activeTab, onTabChange, isCollapsed = false, onToggleCollapse }: SidebarProps) {
+export function Sidebar({
+  activeTab,
+  onTabChange,
+  isCollapsed = false,
+  onToggleCollapse,
+  onSettingsSave,
+}: SidebarProps) {
   const [isEditingSettings, setIsEditingSettings] = useState(false);
   const {
     settings,
@@ -75,6 +82,7 @@ export function Sidebar({ activeTab, onTabChange, isCollapsed = false, onToggleC
       // This prevents race conditions where updates could be overwritten.
       updateSettings(tempSettings);
       setIsEditingSettings(false);
+      onSettingsSave(); // Notify parent that settings have been saved
 
       // Auto-switch to chat tab when settings are successfully saved
       // Use a small delay to ensure settings are fully updated

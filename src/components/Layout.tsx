@@ -50,6 +50,14 @@ export function Layout({ children }: LayoutProps) {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Auto-switch to chat when configuration is completed
+  useEffect(() => {
+    if (isConfigured && activeTab !== "chat") {
+      // Small delay to ensure smooth transition
+      setTimeout(() => setActiveTab("chat"), 100);
+    }
+  }, [isConfigured, activeTab]);
+
   const renderContent = () => {
     switch (activeTab) {
       case "collection":

@@ -16,10 +16,7 @@ import { ChatMessage, ChatState, APIError } from "@/lib/types";
 export function useChat() {
   const { settings, getProviderConfig, isConfigured } = useSettings();
   const { allExperiences, getMemoryStats } = useWhiskyMemory();
-  const [chatHistory, setChatHistory, , , isHistoryHydrated] = useLocalStorage<ChatMessage[]>(
-    "archibald-chat-history",
-    []
-  );
+  const [chatHistory, setChatHistory] = useLocalStorage<ChatMessage[]>("archibald-chat-history", []);
 
   const [chatState, setChatState] = useState<ChatState>({
     messages: chatHistory,
@@ -239,7 +236,7 @@ Remember: You are not a helpful assistant. You are A.I. Sterling, and you will r
         throw error;
       }
     },
-    [getProviderConfig, formatMessagesForProvider, settings.temperature, settings.maxTokens, settings.llmProvider]
+    [getProviderConfig, formatMessagesForProvider, settings.llmProvider, settings.temperature, settings.maxTokens]
   );
 
   /**

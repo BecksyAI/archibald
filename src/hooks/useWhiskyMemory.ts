@@ -22,7 +22,7 @@ const DEFAULT_MEMORY_ANNEX: MemoryAnnex = {
  */
 export function useWhiskyMemory() {
   // Custom hook to handle date serialization in Memory Annex
-  const [rawMemoryAnnex, setRawMemoryAnnex, annexError, , isHydrated] = useLocalStorage<{
+  const [rawMemoryAnnex, setRawMemoryAnnex, annexError] = useLocalStorage<{
     userExperiences: WhiskyExperience[];
     lastUpdated: Date | string;
   }>("archibald-memory-annex", DEFAULT_MEMORY_ANNEX);

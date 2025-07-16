@@ -137,7 +137,7 @@ export function useSettings() {
       case "openai":
         return {
           apiUrl: "https://api.openai.com/v1/chat/completions",
-          model: "gpt-3.5-turbo",
+          model: "gpt-4o-mini",
           headers: {
             Authorization: `Bearer ${settings.apiKey}`,
             "Content-Type": "application/json",
@@ -196,7 +196,7 @@ export function useSettings() {
     // Validation
     validateSettings,
     isApiKeyConfigured,
-    isConfigured: isHydrated ? isConfigured : false, // Prevent hydration mismatch
+    isConfigured, // Always return current state for immediate updates
 
     // Provider utilities
     getProviderConfig,

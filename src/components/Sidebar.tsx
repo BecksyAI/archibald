@@ -5,7 +5,7 @@
 
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { MessageSquare, Library, FilePlus2, Settings, Save, X, Menu } from "lucide-react";
 import { useSettings } from "@/hooks/useSettings";
 import { LLMProvider } from "@/lib/types";
@@ -26,11 +26,7 @@ export function Sidebar({ activeTab, onTabChange, isCollapsed = false, onToggleC
   const [isEditingSettings, setIsEditingSettings] = useState(false);
   const {
     settings,
-    updateApiKey,
-    updateLLMProvider,
-    updateTemperature,
-    updateMaxTokens,
-    resetSettings,
+    updateSettings, // Use the bulk updater
     validateSettings,
     getMaskedApiKey,
     isConfigured,
@@ -38,11 +34,23 @@ export function Sidebar({ activeTab, onTabChange, isCollapsed = false, onToggleC
   } = useSettings();
 
   const [tempSettings, setTempSettings] = useState({
-    apiKey: "",
+    apiKey: settings.apiKey,
     llmProvider: settings.llmProvider,
     temperature: settings.temperature,
     maxTokens: settings.maxTokens,
   });
+
+  // Update temp settings when settings change (e.g., loaded from localStorage)
+  useEffect(() => {
+    if (!isEditingSettings) {
+      setTempSettings({
+        apiKey: settings.apiKey,
+        llmProvider: settings.llmProvider,
+        temperature: settings.temperature,
+        maxTokens: settings.maxTokens,
+      });
+    }
+  }, [settings, isEditingSettings]);
 
   const handleStartEdit = () => {
     setTempSettings({
@@ -56,10 +64,9 @@ export function Sidebar({ activeTab, onTabChange, isCollapsed = false, onToggleC
 
   const handleSaveSettings = () => {
     try {
-      updateApiKey(tempSettings.apiKey);
-      updateLLMProvider(tempSettings.llmProvider);
-      updateTemperature(tempSettings.temperature);
-      updateMaxTokens(tempSettings.maxTokens);
+      // FIX: Use a single, atomic update instead of multiple separate updates.
+      // This prevents race conditions where updates could be overwritten.
+      updateSettings(tempSettings);
       setIsEditingSettings(false);
     } catch (error) {
       console.error("Error saving settings:", error);
@@ -74,7 +81,6 @@ export function Sidebar({ activeTab, onTabChange, isCollapsed = false, onToggleC
     { id: "chat", label: "Chat", icon: MessageSquare },
     { id: "collection", label: "Whisky Collection", icon: Library },
     { id: "memory-annex", label: "Memory Annex", icon: FilePlus2 },
-    { id: "settings", label: "Settings", icon: Settings },
   ];
 
   const validation = validateSettings();

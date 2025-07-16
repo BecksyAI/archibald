@@ -34,55 +34,57 @@ export function useLocalStorage<T>(
   key: string,
   initialValue: T,
   encrypt: boolean = false
-): [T, (value: T | ((prev: T) => T)) => void, string | null, () => void] {
+): [T, (value: T | ((prev: T) => T)) => void, string | null, () => void, boolean] {
+  // Always start with initial value during SSR to prevent hydration mismatch
   const [storedValue, setStoredValue] = useState<T>(initialValue);
   const [error, setError] = useState<string | null>(null);
+  const [isHydrated, setIsHydrated] = useState(false);
 
-  // Initialize from localStorage
+  // Hydrate from localStorage on client-side after SSR
   useEffect(() => {
+    if (typeof window === "undefined") return;
+
     try {
       const item = window.localStorage.getItem(key);
       if (item !== null) {
         const parsedItem = encrypt ? simpleEncrypt(item) : item;
-        setStoredValue(JSON.parse(parsedItem));
+        const parsedValue = JSON.parse(parsedItem);
+        setStoredValue(parsedValue);
       }
+      setIsHydrated(true);
+    } catch (err) {
+      console.error(`[useLocalStorage] Error hydrating key "${key}":`, err);
+      setIsHydrated(true);
+    }
+  }, [key, encrypt]); // Only run on mount and when key/encrypt changes
+
+  // FIX: Decouple localStorage persistence from state updates to prevent race conditions.
+  // This effect now runs *after* the state has been updated.
+  useEffect(() => {
+    // Skip localStorage access during SSR or before hydration
+    if (typeof window === "undefined" || !isHydrated) return;
+
+    try {
+      const serializedValue = JSON.stringify(storedValue);
+      const finalValue = encrypt ? simpleEncrypt(serializedValue) : serializedValue;
+      window.localStorage.setItem(key, finalValue);
       setError(null);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to read from localStorage";
+      const message = err instanceof Error ? err.message : "Failed to write to localStorage";
       setError(message);
-      console.error(`[useLocalStorage] Error reading key "${key}":`, err);
+      console.error(`[useLocalStorage] Error writing key "${key}":`, err);
     }
-  }, [key, encrypt]);
-
-  /**
-   * Update the stored value
-   * @param value - New value or function to update value
-   */
-  const setValue = useCallback(
-    (value: T | ((prev: T) => T)) => {
-      try {
-        const valueToStore = value instanceof Function ? value(storedValue) : value;
-        setStoredValue(valueToStore);
-
-        const serializedValue = JSON.stringify(valueToStore);
-        const finalValue = encrypt ? simpleEncrypt(serializedValue) : serializedValue;
-
-        window.localStorage.setItem(key, finalValue);
-        setError(null);
-      } catch (err) {
-        const message = err instanceof Error ? err.message : "Failed to write to localStorage";
-        setError(message);
-        console.error(`[useLocalStorage] Error writing key "${key}":`, err);
-        throw new StorageError(message);
-      }
-    },
-    [key, storedValue, encrypt]
-  );
+  }, [key, storedValue, encrypt, isHydrated]);
 
   /**
    * Clear the stored value
    */
   const clearValue = useCallback(() => {
+    if (typeof window === "undefined") {
+      setStoredValue(initialValue);
+      return;
+    }
+
     try {
       window.localStorage.removeItem(key);
       setStoredValue(initialValue);
@@ -95,7 +97,9 @@ export function useLocalStorage<T>(
     }
   }, [key, initialValue]);
 
-  return [storedValue, setValue, error, clearValue];
+  // Return the actual state setter from useState, which is guaranteed to be stable
+  // and handle functional updates correctly.
+  return [storedValue, setStoredValue, error, clearValue, isHydrated];
 }
 
 /**
@@ -103,6 +107,10 @@ export function useLocalStorage<T>(
  * @returns Whether localStorage is available
  */
 export function isLocalStorageAvailable(): boolean {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
   try {
     const test = "__localStorage_test__";
     window.localStorage.setItem(test, test);
@@ -118,6 +126,10 @@ export function isLocalStorageAvailable(): boolean {
  * @returns Object with used and total storage information
  */
 export function getStorageStats(): { used: number; total: number; percentage: number } {
+  if (typeof window === "undefined") {
+    return { used: 0, total: 0, percentage: 0 };
+  }
+
   try {
     let used = 0;
     for (const key in localStorage) {

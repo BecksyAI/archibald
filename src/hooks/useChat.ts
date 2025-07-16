@@ -16,7 +16,10 @@ import { ChatMessage, ChatState, APIError } from "@/lib/types";
 export function useChat() {
   const { settings, getProviderConfig, isConfigured } = useSettings();
   const { allExperiences, getMemoryStats } = useWhiskyMemory();
-  const [chatHistory, setChatHistory] = useLocalStorage<ChatMessage[]>("archibald-chat-history", []);
+  const [chatHistory, setChatHistory, , , isHistoryHydrated] = useLocalStorage<ChatMessage[]>(
+    "archibald-chat-history",
+    []
+  );
 
   const [chatState, setChatState] = useState<ChatState>({
     messages: chatHistory,
@@ -162,6 +165,10 @@ Remember: You are not a helpful assistant. You are A.I. Sterling, and you will r
                 parts: [{ text: msg.content }],
               })),
             systemInstruction: { parts: [{ text: systemPrompt }] },
+            generationConfig: {
+              temperature: settings.temperature,
+              maxOutputTokens: settings.maxTokens,
+            },
           };
 
         default:
@@ -192,12 +199,16 @@ Remember: You are not a helpful assistant. You are A.I. Sterling, and you will r
         const response = await fetch(config.apiUrl, {
           method: "POST",
           headers: config.headers,
-          body: JSON.stringify({
-            ...formattedMessages,
-            model: config.model,
-            temperature: settings.temperature,
-            max_tokens: settings.maxTokens,
-          }),
+          body: JSON.stringify(
+            settings.llmProvider === "gemini"
+              ? formattedMessages // Gemini uses different format
+              : {
+                  ...formattedMessages,
+                  model: config.model,
+                  temperature: settings.temperature,
+                  max_tokens: settings.maxTokens,
+                }
+          ),
           signal: abortControllerRef.current.signal,
         });
 
@@ -216,7 +227,7 @@ Remember: You are not a helpful assistant. You are A.I. Sterling, and you will r
             return data.content[0]?.text || "No response from Claude";
 
           case "gemini":
-            return data.candidates[0]?.content?.parts[0]?.text || "No response from Gemini";
+            return data.candidates?.[0]?.content?.parts?.[0]?.text || "No response from Gemini";
 
           default:
             throw new Error(`Unsupported provider: ${settings.llmProvider}`);
@@ -255,7 +266,6 @@ Remember: You are not a helpful assistant. You are A.I. Sterling, and you will r
       });
 
       // Add thinking indicator
-      const thinkingMessageId = generateMessageId();
       addMessage({
         role: "assistant",
         content: "Archibald is processing...",

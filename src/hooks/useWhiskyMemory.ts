@@ -21,9 +21,48 @@ const DEFAULT_MEMORY_ANNEX: MemoryAnnex = {
  * @returns Complete whisky memory management interface
  */
 export function useWhiskyMemory() {
-  const [memoryAnnex, setMemoryAnnex, annexError] = useLocalStorage<MemoryAnnex>(
-    "archibald-memory-annex",
-    DEFAULT_MEMORY_ANNEX
+  // Custom hook to handle date serialization in Memory Annex
+  const [rawMemoryAnnex, setRawMemoryAnnex, annexError, , isHydrated] = useLocalStorage<{
+    userExperiences: WhiskyExperience[];
+    lastUpdated: Date | string;
+  }>("archibald-memory-annex", DEFAULT_MEMORY_ANNEX);
+
+  // Transform raw storage data to properly typed MemoryAnnex
+  const memoryAnnex = useMemo((): MemoryAnnex => {
+    if (!rawMemoryAnnex) return DEFAULT_MEMORY_ANNEX;
+
+    return {
+      userExperiences: rawMemoryAnnex.userExperiences || [],
+      lastUpdated:
+        typeof rawMemoryAnnex.lastUpdated === "string"
+          ? new Date(rawMemoryAnnex.lastUpdated)
+          : rawMemoryAnnex.lastUpdated instanceof Date
+          ? rawMemoryAnnex.lastUpdated
+          : new Date(),
+    };
+  }, [rawMemoryAnnex]);
+
+  // Wrapper to handle date serialization when setting
+  const setMemoryAnnex = useCallback(
+    (value: MemoryAnnex | ((prev: MemoryAnnex) => MemoryAnnex)) => {
+      if (typeof value === "function") {
+        setRawMemoryAnnex((prev: { userExperiences: WhiskyExperience[]; lastUpdated: Date | string }) => {
+          const currentAnnex = {
+            userExperiences: prev.userExperiences || [],
+            lastUpdated:
+              typeof prev.lastUpdated === "string"
+                ? new Date(prev.lastUpdated)
+                : prev.lastUpdated instanceof Date
+                ? prev.lastUpdated
+                : new Date(),
+          };
+          return value(currentAnnex);
+        });
+      } else {
+        setRawMemoryAnnex(value);
+      }
+    },
+    [setRawMemoryAnnex]
   );
 
   const [coreMemory, setCoreMemory] = useState<WhiskyExperience[]>([]);
@@ -249,7 +288,7 @@ export function useWhiskyMemory() {
       userCount,
       regionStats,
       averageAge: isNaN(averageAge) ? 0 : averageAge,
-      lastUpdated: memoryAnnex.lastUpdated,
+      lastUpdated: new Date(memoryAnnex.lastUpdated),
     };
   }, [allExperiences, coreMemory, memoryAnnex]);
 

@@ -5,11 +5,12 @@
 
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Sidebar } from "./Sidebar";
 import { WhiskyCollection } from "./WhiskyCollection";
 import { MemoryAnnexForm } from "./MemoryAnnexForm";
 import { ChatInterface } from "./ChatInterface";
+import { useSettings } from "@/hooks/useSettings";
 
 interface LayoutProps {
   children?: React.ReactNode;
@@ -23,10 +24,31 @@ interface LayoutProps {
 export function Layout({ children }: LayoutProps) {
   const [activeTab, setActiveTab] = useState("chat");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const { isConfigured, isHydrated } = useSettings(); // Get config state here
 
   const toggleSidebar = () => {
     setSidebarCollapsed(!sidebarCollapsed);
   };
+
+  // Auto-collapse sidebar on mobile
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setSidebarCollapsed(true);
+      } else {
+        setSidebarCollapsed(false);
+      }
+    };
+
+    // Set initial state
+    handleResize();
+
+    // Add event listener
+    window.addEventListener("resize", handleResize);
+
+    // Cleanup
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const renderContent = () => {
     switch (activeTab) {
@@ -34,20 +56,24 @@ export function Layout({ children }: LayoutProps) {
         return <WhiskyCollection className="flex-1" />;
       case "memory-annex":
         return <MemoryAnnexForm className="flex-1" />;
-      case "settings":
-        return (
-          <div className="flex-1 p-6 lg:p-10">
-            <h1 className="font-serif text-3xl font-semibold text-parchment mb-4">Settings</h1>
-            <p className="text-limestone">
-              Settings are managed in the sidebar. Use the System Configuration panel to adjust your preferences.
-            </p>
-          </div>
-        );
       case "chat":
       default:
-        return children || <ChatInterface className="flex-1" />;
+        // Pass isConfigured down as a prop
+        return children || <ChatInterface className="flex-1" isConfigured={isConfigured} />;
     }
   };
+
+  // Show loading state during hydration to prevent mismatch
+  if (!isHydrated) {
+    return (
+      <div className="flex h-screen w-full bg-peat-smoke text-parchment items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-dram mx-auto mb-4"></div>
+          <p className="text-limestone">Loading Archibald&apos;s Athenaeum...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen w-full bg-peat-smoke text-parchment">

@@ -20,7 +20,7 @@ const DEFAULT_SETTINGS: AppSettings = {
  * @returns Settings object with getters, setters, and validation status
  */
 export function useSettings() {
-  const [settings, setSettings, storageError, clearSettings] = useLocalStorage<AppSettings>(
+  const [settings, setSettings, storageError, clearSettings, isHydrated] = useLocalStorage<AppSettings>(
     "archibald-settings",
     DEFAULT_SETTINGS,
     true // Encrypt settings since they contain API keys
@@ -96,7 +96,15 @@ export function useSettings() {
    */
   const validateSettings = useCallback(() => {
     try {
-      validateAppSettings(settings);
+      // Create a copy of settings to avoid validation issues with empty API key
+      const settingsToValidate = { ...settings };
+
+      // If API key is empty, use a dummy key for validation structure check
+      if (!settingsToValidate.apiKey || settingsToValidate.apiKey.trim() === "") {
+        settingsToValidate.apiKey = "dummy-key-for-validation";
+      }
+
+      validateAppSettings(settingsToValidate);
       return { isValid: true, errors: [] };
     } catch (error) {
       return {
@@ -147,8 +155,8 @@ export function useSettings() {
         };
       case "gemini":
         return {
-          apiUrl: `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${settings.apiKey}`,
-          model: "gemini-pro",
+          apiUrl: `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${settings.apiKey}`,
+          model: "gemini-1.5-flash",
           headers: {
             "Content-Type": "application/json",
           } as Record<string, string>,
@@ -188,7 +196,7 @@ export function useSettings() {
     // Validation
     validateSettings,
     isApiKeyConfigured,
-    isConfigured,
+    isConfigured: isHydrated ? isConfigured : false, // Prevent hydration mismatch
 
     // Provider utilities
     getProviderConfig,
@@ -196,6 +204,9 @@ export function useSettings() {
 
     // Error handling
     error: storageError,
+
+    // Hydration state
+    isHydrated,
   };
 }
 

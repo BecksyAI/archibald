@@ -49,29 +49,17 @@ export function validateWhiskyExperience(experience: unknown): WhiskyExperience 
     throw new ValidationError("ABV must be a number between 0 and 100");
   }
 
-  if (!Array.isArray(details.tastingNotes) || details.tastingNotes.length === 0) {
-    throw new ValidationError("Tasting notes must be a non-empty array");
-  }
-
-  if (!details.tastingNotes.every((note) => typeof note === "string" && note.trim() !== "")) {
-    throw new ValidationError("All tasting notes must be non-empty strings");
-  }
-
-  if (typeof details.caskType !== "string" || details.caskType.trim() === "") {
-    throw new ValidationError("Cask type must be a non-empty string");
-  }
-
-  if (typeof details.foodPairing !== "string" || details.foodPairing.trim() === "") {
-    throw new ValidationError("Food pairing must be a non-empty string");
-  }
-
-  // Validate experience fields
+  // Validate other required fields
   if (typeof exp.experienceDate !== "string" || exp.experienceDate.trim() === "") {
     throw new ValidationError("Experience date must be a non-empty string");
   }
 
   if (typeof exp.experienceLocation !== "string" || exp.experienceLocation.trim() === "") {
     throw new ValidationError("Experience location must be a non-empty string");
+  }
+
+  if (!Array.isArray(details.tastingNotes) || details.tastingNotes.length === 0) {
+    throw new ValidationError("Tasting notes must be a non-empty array");
   }
 
   if (typeof exp.narrative !== "string" || exp.narrative.trim() === "") {
@@ -83,6 +71,30 @@ export function validateWhiskyExperience(experience: unknown): WhiskyExperience 
   }
 
   return exp as unknown as WhiskyExperience;
+}
+
+/**
+ * Sanitizes a WhiskyExperience object by validating and cleaning all fields
+ * @param experience - The experience object to sanitize
+ * @returns The sanitized experience object
+ */
+export function sanitizeWhiskyExperience(experience: unknown): WhiskyExperience {
+  const validated = validateWhiskyExperience(experience);
+
+  // Additional sanitization
+  return {
+    ...validated,
+    whiskyDetails: {
+      ...validated.whiskyDetails,
+      name: sanitizeString(validated.whiskyDetails.name),
+      distillery: sanitizeString(validated.whiskyDetails.distillery),
+      region: sanitizeString(validated.whiskyDetails.region),
+    },
+    experienceDate: sanitizeString(validated.experienceDate),
+    experienceLocation: sanitizeString(validated.experienceLocation),
+    narrative: sanitizeString(validated.narrative),
+    finalVerdict: sanitizeString(validated.finalVerdict),
+  };
 }
 
 /**
@@ -118,36 +130,14 @@ export function validateAppSettings(settings: unknown): AppSettings {
 }
 
 /**
- * Sanitizes a string by trimming whitespace and removing potentially dangerous characters
- * @param input - The input string to sanitize
+ * Sanitizes a string by trimming whitespace and removing dangerous characters
+ * @param str - The string to sanitize
  * @returns The sanitized string
  */
-export function sanitizeString(input: string): string {
-  return input.trim().replace(/[<>]/g, "");
-}
-
-/**
- * Validates and sanitizes a whisky experience before adding to memory
- * @param experience - The experience to validate and sanitize
- * @returns The validated and sanitized experience
- */
-export function sanitizeWhiskyExperience(experience: unknown): WhiskyExperience {
-  const validatedExp = validateWhiskyExperience(experience);
-
-  return {
-    ...validatedExp,
-    whiskyDetails: {
-      ...validatedExp.whiskyDetails,
-      name: sanitizeString(validatedExp.whiskyDetails.name),
-      distillery: sanitizeString(validatedExp.whiskyDetails.distillery),
-      region: sanitizeString(validatedExp.whiskyDetails.region),
-      tastingNotes: validatedExp.whiskyDetails.tastingNotes.map(sanitizeString),
-      caskType: sanitizeString(validatedExp.whiskyDetails.caskType),
-      foodPairing: sanitizeString(validatedExp.whiskyDetails.foodPairing),
-    },
-    experienceDate: sanitizeString(validatedExp.experienceDate),
-    experienceLocation: sanitizeString(validatedExp.experienceLocation),
-    narrative: sanitizeString(validatedExp.narrative),
-    finalVerdict: sanitizeString(validatedExp.finalVerdict),
-  };
+export function sanitizeString(str: string): string {
+  return str
+    .trim()
+    .replace(/[<>]/g, "") // Remove angle brackets to prevent XSS
+    .replace(/javascript:/gi, "") // Remove javascript: protocol
+    .replace(/on\w+=/gi, ""); // Remove event handlers
 }

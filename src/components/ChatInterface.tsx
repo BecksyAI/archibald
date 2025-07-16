@@ -12,6 +12,7 @@ import { ChatMessage } from "@/lib/types";
 
 interface ChatInterfaceProps {
   className?: string;
+  isConfigured: boolean; // Add prop to receive config status
 }
 
 /**
@@ -19,8 +20,8 @@ interface ChatInterfaceProps {
  * @param props - Component props
  * @returns ChatInterface component
  */
-export function ChatInterface({ className }: ChatInterfaceProps) {
-  const { messages, isLoading, error, isConfigured, sendMessage, cancelRequest, clearChat, exportChat } = useChat();
+export function ChatInterface({ className, isConfigured: propIsConfigured }: ChatInterfaceProps) {
+  const { messages, isLoading, error, sendMessage, cancelRequest, clearChat, exportChat } = useChat();
 
   const [inputMessage, setInputMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -40,7 +41,7 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!inputMessage.trim() || isSubmitting || !isConfigured) {
+    if (!inputMessage.trim() || isSubmitting || !propIsConfigured) {
       return;
     }
 
@@ -79,7 +80,8 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
     }
   };
 
-  if (!isConfigured) {
+  // Now, use the prop for the check
+  if (!propIsConfigured) {
     return (
       <div className={`flex items-center justify-center h-full ${className}`}>
         <div className="text-center max-w-md">
@@ -102,7 +104,7 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
             <h1 className="font-serif text-2xl font-semibold text-parchment">Conversation with Archibald</h1>
             <p className="text-limestone text-sm">
               {messages.length === 0
-                ? "Begin your discourse with the pompous connoisseur"
+                ? "Begin your discourse with the connoisseur"
                 : `${messages.length} messages exchanged`}
             </p>
           </div>
@@ -178,7 +180,7 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Compose your query..."
-            disabled={isSubmitting || !isConfigured}
+            disabled={isSubmitting || !propIsConfigured}
             className="w-full bg-gray-900 border border-gray-700 rounded-lg py-3 pl-4 pr-28 text-parchment focus:ring-2 focus:ring-amber-dram focus:border-amber-dram transition disabled:opacity-50 disabled:cursor-not-allowed"
           />
           <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
@@ -194,7 +196,7 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
             )}
             <button
               type="submit"
-              disabled={!inputMessage.trim() || isSubmitting || !isConfigured}
+              disabled={!inputMessage.trim() || isSubmitting || !propIsConfigured}
               className="bg-amber-dram text-parchment font-semibold py-2 px-4 rounded-lg hover:bg-amber-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
             >
               <span className="hidden sm:inline">Send</span>
@@ -220,12 +222,20 @@ function ChatMessageBubble({ message }: ChatMessageBubbleProps) {
   const isUser = message.role === "user";
   const isThinking = message.isThinking;
 
-  const formatTime = (date: Date) => {
-    return new Intl.DateTimeFormat("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    }).format(date);
+  const formatTime = (date: Date | string) => {
+    try {
+      const dateObj = typeof date === "string" ? new Date(date) : date;
+      if (isNaN(dateObj.getTime())) {
+        return "Invalid time";
+      }
+      return new Intl.DateTimeFormat("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      }).format(dateObj);
+    } catch {
+      return "Invalid time";
+    }
   };
 
   if (isUser) {

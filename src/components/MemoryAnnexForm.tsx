@@ -50,7 +50,7 @@ const defaultFormData: FormData = {
  * @returns MemoryAnnexForm component
  */
 export function MemoryAnnexForm({ className }: MemoryAnnexFormProps) {
-  const { addExperience, memoryAnnex, getMemoryStats, error } = useWhiskyMemory();
+  const { addExperience, getMemoryStats, error } = useWhiskyMemory();
   const [formData, setFormData] = useState<FormData>(defaultFormData);
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -59,7 +59,7 @@ export function MemoryAnnexForm({ className }: MemoryAnnexFormProps) {
 
   const memoryStats = getMemoryStats();
 
-  const updateFormData = (field: keyof FormData, value: any) => {
+  const updateFormData = (field: keyof FormData, value: string | number | string[]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     // Clear error when field is updated
     if (errors[field]) {
@@ -187,8 +187,8 @@ export function MemoryAnnexForm({ className }: MemoryAnnexFormProps) {
   };
 
   return (
-    <div className={`p-6 lg:p-10 ${className}`}>
-      <div className="mb-8">
+    <div className={`flex flex-col h-full ${className}`}>
+      <div className="flex-shrink-0 p-6 lg:p-8 border-b border-gray-700">
         <h1 className="font-serif text-3xl font-semibold text-parchment mb-2">Memory Annex</h1>
         <p className="text-limestone mb-4">
           Add your personal whisky experiences to my collection. I shall judge them accordingly.
@@ -199,314 +199,320 @@ export function MemoryAnnexForm({ className }: MemoryAnnexFormProps) {
         </div>
       </div>
 
-      {error && (
-        <div className="mb-6 p-4 bg-red-900/20 border border-red-400/50 rounded-lg">
-          <div className="flex items-center gap-2">
-            <AlertCircle className="h-5 w-5 text-red-400" />
-            <p className="text-red-400">Error: {error}</p>
-          </div>
-        </div>
-      )}
-
-      {showSuccessMessage && (
-        <div className="mb-6 p-4 bg-green-900/20 border border-green-400/50 rounded-lg">
-          <div className="flex items-center gap-2">
-            <CheckCircle className="h-5 w-5 text-green-400" />
-            <p className="text-green-400">Experience added successfully to the Memory Annex!</p>
-          </div>
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Whisky Details Section */}
-        <div className="bg-aged-oak border border-gray-700 rounded-lg p-6">
-          <h2 className="font-serif text-xl font-semibold text-parchment mb-4">Whisky Details</h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-limestone mb-1">
-                Whisky Name *
-              </label>
-              <input
-                id="name"
-                type="text"
-                value={formData.name}
-                onChange={(e) => updateFormData("name", e.target.value)}
-                className={`w-full bg-gray-900 border rounded-md p-2 text-parchment focus:ring-1 focus:ring-amber-dram transition ${
-                  errors.name ? "border-red-400" : "border-gray-700 focus:border-amber-dram"
-                }`}
-                placeholder="e.g., Lagavulin 16 Year Old"
-              />
-              {errors.name && <p className="text-red-400 text-xs mt-1">{errors.name}</p>}
-            </div>
-
-            <div>
-              <label htmlFor="distillery" className="block text-sm font-medium text-limestone mb-1">
-                Distillery *
-              </label>
-              <input
-                id="distillery"
-                type="text"
-                value={formData.distillery}
-                onChange={(e) => updateFormData("distillery", e.target.value)}
-                className={`w-full bg-gray-900 border rounded-md p-2 text-parchment focus:ring-1 focus:ring-amber-dram transition ${
-                  errors.distillery ? "border-red-400" : "border-gray-700 focus:border-amber-dram"
-                }`}
-                placeholder="e.g., Lagavulin"
-              />
-              {errors.distillery && <p className="text-red-400 text-xs mt-1">{errors.distillery}</p>}
-            </div>
-
-            <div>
-              <label htmlFor="region" className="block text-sm font-medium text-limestone mb-1">
-                Region *
-              </label>
-              <input
-                id="region"
-                type="text"
-                value={formData.region}
-                onChange={(e) => updateFormData("region", e.target.value)}
-                className={`w-full bg-gray-900 border rounded-md p-2 text-parchment focus:ring-1 focus:ring-amber-dram transition ${
-                  errors.region ? "border-red-400" : "border-gray-700 focus:border-amber-dram"
-                }`}
-                placeholder="e.g., Islay"
-              />
-              {errors.region && <p className="text-red-400 text-xs mt-1">{errors.region}</p>}
-            </div>
-
-            <div>
-              <label htmlFor="age" className="block text-sm font-medium text-limestone mb-1">
-                Age
-              </label>
-              <select
-                id="age"
-                value={formData.age}
-                onChange={(e) =>
-                  updateFormData(
-                    "age",
-                    e.target.value === "No Age Statement" ? "No Age Statement" : parseInt(e.target.value)
-                  )
-                }
-                className={`w-full bg-gray-900 border rounded-md p-2 text-parchment focus:ring-1 focus:ring-amber-dram transition ${
-                  errors.age ? "border-red-400" : "border-gray-700 focus:border-amber-dram"
-                }`}
-              >
-                <option value="No Age Statement">No Age Statement</option>
-                {Array.from({ length: 51 }, (_, i) => i + 3).map((age) => (
-                  <option key={age} value={age}>
-                    {age} years
-                  </option>
-                ))}
-              </select>
-              {errors.age && <p className="text-red-400 text-xs mt-1">{errors.age}</p>}
-            </div>
-
-            <div>
-              <label htmlFor="abv" className="block text-sm font-medium text-limestone mb-1">
-                ABV (%) *
-              </label>
-              <input
-                id="abv"
-                type="number"
-                min="0"
-                max="100"
-                step="0.1"
-                value={formData.abv}
-                onChange={(e) => updateFormData("abv", parseFloat(e.target.value))}
-                className={`w-full bg-gray-900 border rounded-md p-2 text-parchment focus:ring-1 focus:ring-amber-dram transition ${
-                  errors.abv ? "border-red-400" : "border-gray-700 focus:border-amber-dram"
-                }`}
-                placeholder="e.g., 43.0"
-              />
-              {errors.abv && <p className="text-red-400 text-xs mt-1">{errors.abv}</p>}
-            </div>
-
-            <div>
-              <label htmlFor="caskType" className="block text-sm font-medium text-limestone mb-1">
-                Cask Type *
-              </label>
-              <input
-                id="caskType"
-                type="text"
-                value={formData.caskType}
-                onChange={(e) => updateFormData("caskType", e.target.value)}
-                className={`w-full bg-gray-900 border rounded-md p-2 text-parchment focus:ring-1 focus:ring-amber-dram transition ${
-                  errors.caskType ? "border-red-400" : "border-gray-700 focus:border-amber-dram"
-                }`}
-                placeholder="e.g., Ex-Bourbon"
-              />
-              {errors.caskType && <p className="text-red-400 text-xs mt-1">{errors.caskType}</p>}
-            </div>
-          </div>
-
-          <div className="mt-4">
-            <label htmlFor="foodPairing" className="block text-sm font-medium text-limestone mb-1">
-              Food Pairing *
-            </label>
-            <input
-              id="foodPairing"
-              type="text"
-              value={formData.foodPairing}
-              onChange={(e) => updateFormData("foodPairing", e.target.value)}
-              className={`w-full bg-gray-900 border rounded-md p-2 text-parchment focus:ring-1 focus:ring-amber-dram transition ${
-                errors.foodPairing ? "border-red-400" : "border-gray-700 focus:border-amber-dram"
-              }`}
-              placeholder="e.g., Dark chocolate and sea salt"
-            />
-            {errors.foodPairing && <p className="text-red-400 text-xs mt-1">{errors.foodPairing}</p>}
-          </div>
-
-          {/* Tasting Notes */}
-          <div className="mt-4">
-            <label className="block text-sm font-medium text-limestone mb-1">Tasting Notes *</label>
-            <div className="space-y-2">
-              {formData.tastingNotes.map((note, index) => (
-                <div key={index} className="flex gap-2">
-                  <input
-                    type="text"
-                    value={note}
-                    onChange={(e) => {
-                      const newNotes = [...formData.tastingNotes];
-                      newNotes[index] = e.target.value;
-                      updateFormData("tastingNotes", newNotes);
-                    }}
-                    className="flex-1 bg-gray-900 border border-gray-700 rounded-md p-2 text-parchment focus:ring-1 focus:ring-amber-dram focus:border-amber-dram transition"
-                    placeholder="e.g., Smoky, Peaty, Honey"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeTastingNote(index)}
-                    className="p-2 text-red-400 hover:text-red-300 transition-colors"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-              ))}
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={newTastingNote}
-                  onChange={(e) => setNewTastingNote(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addTastingNote())}
-                  className="flex-1 bg-gray-900 border border-gray-700 rounded-md p-2 text-parchment focus:ring-1 focus:ring-amber-dram focus:border-amber-dram transition"
-                  placeholder="Add another tasting note"
-                />
-                <button
-                  type="button"
-                  onClick={addTastingNote}
-                  className="p-2 bg-amber-dram text-parchment rounded-md hover:bg-amber-500 transition-colors"
-                >
-                  <Plus className="h-4 w-4" />
-                </button>
+      <div className="flex-1 overflow-y-auto">
+        <div className="p-6 lg:p-8">
+          {error && (
+            <div className="mb-6 p-4 bg-red-900/20 border border-red-400/50 rounded-lg">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="h-5 w-5 text-red-400" />
+                <p className="text-red-400">Error: {error}</p>
               </div>
             </div>
-            {errors.tastingNotes && <p className="text-red-400 text-xs mt-1">{errors.tastingNotes}</p>}
-          </div>
-        </div>
+          )}
 
-        {/* Experience Details Section */}
-        <div className="bg-aged-oak border border-gray-700 rounded-lg p-6">
-          <h2 className="font-serif text-xl font-semibold text-parchment mb-4">Experience Details</h2>
+          {showSuccessMessage && (
+            <div className="mb-6 p-4 bg-green-900/20 border border-green-400/50 rounded-lg">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-5 w-5 text-green-400" />
+                <p className="text-green-400">Experience added successfully to the Memory Annex!</p>
+              </div>
+            </div>
+          )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="experienceDate" className="block text-sm font-medium text-limestone mb-1">
-                Experience Date *
-              </label>
-              <input
-                id="experienceDate"
-                type="text"
-                value={formData.experienceDate}
-                onChange={(e) => updateFormData("experienceDate", e.target.value)}
-                className={`w-full bg-gray-900 border rounded-md p-2 text-parchment focus:ring-1 focus:ring-amber-dram transition ${
-                  errors.experienceDate ? "border-red-400" : "border-gray-700 focus:border-amber-dram"
-                }`}
-                placeholder="e.g., A cold winter evening in December"
-              />
-              {errors.experienceDate && <p className="text-red-400 text-xs mt-1">{errors.experienceDate}</p>}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Whisky Details Section */}
+            <div className="bg-aged-oak border border-gray-700 rounded-lg p-6">
+              <h2 className="font-serif text-xl font-semibold text-parchment mb-4">Whisky Details</h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="name" className="block text-sm font-medium text-limestone mb-1">
+                    Whisky Name *
+                  </label>
+                  <input
+                    id="name"
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => updateFormData("name", e.target.value)}
+                    className={`w-full bg-gray-900 border rounded-md p-2 text-parchment focus:ring-1 focus:ring-amber-dram transition ${
+                      errors.name ? "border-red-400" : "border-gray-700 focus:border-amber-dram"
+                    }`}
+                    placeholder="e.g., Lagavulin 16 Year Old"
+                  />
+                  {errors.name && <p className="text-red-400 text-xs mt-1">{errors.name}</p>}
+                </div>
+
+                <div>
+                  <label htmlFor="distillery" className="block text-sm font-medium text-limestone mb-1">
+                    Distillery *
+                  </label>
+                  <input
+                    id="distillery"
+                    type="text"
+                    value={formData.distillery}
+                    onChange={(e) => updateFormData("distillery", e.target.value)}
+                    className={`w-full bg-gray-900 border rounded-md p-2 text-parchment focus:ring-1 focus:ring-amber-dram transition ${
+                      errors.distillery ? "border-red-400" : "border-gray-700 focus:border-amber-dram"
+                    }`}
+                    placeholder="e.g., Lagavulin"
+                  />
+                  {errors.distillery && <p className="text-red-400 text-xs mt-1">{errors.distillery}</p>}
+                </div>
+
+                <div>
+                  <label htmlFor="region" className="block text-sm font-medium text-limestone mb-1">
+                    Region *
+                  </label>
+                  <input
+                    id="region"
+                    type="text"
+                    value={formData.region}
+                    onChange={(e) => updateFormData("region", e.target.value)}
+                    className={`w-full bg-gray-900 border rounded-md p-2 text-parchment focus:ring-1 focus:ring-amber-dram transition ${
+                      errors.region ? "border-red-400" : "border-gray-700 focus:border-amber-dram"
+                    }`}
+                    placeholder="e.g., Islay"
+                  />
+                  {errors.region && <p className="text-red-400 text-xs mt-1">{errors.region}</p>}
+                </div>
+
+                <div>
+                  <label htmlFor="age" className="block text-sm font-medium text-limestone mb-1">
+                    Age
+                  </label>
+                  <select
+                    id="age"
+                    value={formData.age}
+                    onChange={(e) =>
+                      updateFormData(
+                        "age",
+                        e.target.value === "No Age Statement" ? "No Age Statement" : parseInt(e.target.value)
+                      )
+                    }
+                    className={`w-full bg-gray-900 border rounded-md p-2 text-parchment focus:ring-1 focus:ring-amber-dram transition ${
+                      errors.age ? "border-red-400" : "border-gray-700 focus:border-amber-dram"
+                    }`}
+                  >
+                    <option value="No Age Statement">No Age Statement</option>
+                    {Array.from({ length: 51 }, (_, i) => i + 3).map((age) => (
+                      <option key={age} value={age}>
+                        {age} years
+                      </option>
+                    ))}
+                  </select>
+                  {errors.age && <p className="text-red-400 text-xs mt-1">{errors.age}</p>}
+                </div>
+
+                <div>
+                  <label htmlFor="abv" className="block text-sm font-medium text-limestone mb-1">
+                    ABV (%) *
+                  </label>
+                  <input
+                    id="abv"
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    value={formData.abv}
+                    onChange={(e) => updateFormData("abv", parseFloat(e.target.value))}
+                    className={`w-full bg-gray-900 border rounded-md p-2 text-parchment focus:ring-1 focus:ring-amber-dram transition ${
+                      errors.abv ? "border-red-400" : "border-gray-700 focus:border-amber-dram"
+                    }`}
+                    placeholder="e.g., 43.0"
+                  />
+                  {errors.abv && <p className="text-red-400 text-xs mt-1">{errors.abv}</p>}
+                </div>
+
+                <div>
+                  <label htmlFor="caskType" className="block text-sm font-medium text-limestone mb-1">
+                    Cask Type *
+                  </label>
+                  <input
+                    id="caskType"
+                    type="text"
+                    value={formData.caskType}
+                    onChange={(e) => updateFormData("caskType", e.target.value)}
+                    className={`w-full bg-gray-900 border rounded-md p-2 text-parchment focus:ring-1 focus:ring-amber-dram transition ${
+                      errors.caskType ? "border-red-400" : "border-gray-700 focus:border-amber-dram"
+                    }`}
+                    placeholder="e.g., Ex-Bourbon"
+                  />
+                  {errors.caskType && <p className="text-red-400 text-xs mt-1">{errors.caskType}</p>}
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <label htmlFor="foodPairing" className="block text-sm font-medium text-limestone mb-1">
+                  Food Pairing *
+                </label>
+                <input
+                  id="foodPairing"
+                  type="text"
+                  value={formData.foodPairing}
+                  onChange={(e) => updateFormData("foodPairing", e.target.value)}
+                  className={`w-full bg-gray-900 border rounded-md p-2 text-parchment focus:ring-1 focus:ring-amber-dram transition ${
+                    errors.foodPairing ? "border-red-400" : "border-gray-700 focus:border-amber-dram"
+                  }`}
+                  placeholder="e.g., Dark chocolate and sea salt"
+                />
+                {errors.foodPairing && <p className="text-red-400 text-xs mt-1">{errors.foodPairing}</p>}
+              </div>
+
+              {/* Tasting Notes */}
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-limestone mb-1">Tasting Notes *</label>
+                <div className="space-y-2">
+                  {formData.tastingNotes.map((note, index) => (
+                    <div key={index} className="flex gap-2">
+                      <input
+                        type="text"
+                        value={note}
+                        onChange={(e) => {
+                          const newNotes = [...formData.tastingNotes];
+                          newNotes[index] = e.target.value;
+                          updateFormData("tastingNotes", newNotes);
+                        }}
+                        className="flex-1 bg-gray-900 border border-gray-700 rounded-md p-2 text-parchment focus:ring-1 focus:ring-amber-dram focus:border-amber-dram transition"
+                        placeholder="e.g., Smoky, Peaty, Honey"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeTastingNote(index)}
+                        className="p-2 text-red-400 hover:text-red-300 transition-colors"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newTastingNote}
+                      onChange={(e) => setNewTastingNote(e.target.value)}
+                      onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addTastingNote())}
+                      className="flex-1 bg-gray-900 border border-gray-700 rounded-md p-2 text-parchment focus:ring-1 focus:ring-amber-dram focus:border-amber-dram transition"
+                      placeholder="Add another tasting note"
+                    />
+                    <button
+                      type="button"
+                      onClick={addTastingNote}
+                      className="p-2 bg-amber-dram text-parchment rounded-md hover:bg-amber-500 transition-colors"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+                {errors.tastingNotes && <p className="text-red-400 text-xs mt-1">{errors.tastingNotes}</p>}
+              </div>
             </div>
 
-            <div>
-              <label htmlFor="experienceLocation" className="block text-sm font-medium text-limestone mb-1">
-                Experience Location *
-              </label>
-              <input
-                id="experienceLocation"
-                type="text"
-                value={formData.experienceLocation}
-                onChange={(e) => updateFormData("experienceLocation", e.target.value)}
-                className={`w-full bg-gray-900 border rounded-md p-2 text-parchment focus:ring-1 focus:ring-amber-dram transition ${
-                  errors.experienceLocation ? "border-red-400" : "border-gray-700 focus:border-amber-dram"
-                }`}
-                placeholder="e.g., A cozy pub in Edinburgh"
-              />
-              {errors.experienceLocation && <p className="text-red-400 text-xs mt-1">{errors.experienceLocation}</p>}
+            {/* Experience Details Section */}
+            <div className="bg-aged-oak border border-gray-700 rounded-lg p-6">
+              <h2 className="font-serif text-xl font-semibold text-parchment mb-4">Experience Details</h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="experienceDate" className="block text-sm font-medium text-limestone mb-1">
+                    Experience Date *
+                  </label>
+                  <input
+                    id="experienceDate"
+                    type="text"
+                    value={formData.experienceDate}
+                    onChange={(e) => updateFormData("experienceDate", e.target.value)}
+                    className={`w-full bg-gray-900 border rounded-md p-2 text-parchment focus:ring-1 focus:ring-amber-dram transition ${
+                      errors.experienceDate ? "border-red-400" : "border-gray-700 focus:border-amber-dram"
+                    }`}
+                    placeholder="e.g., A cold winter evening in December"
+                  />
+                  {errors.experienceDate && <p className="text-red-400 text-xs mt-1">{errors.experienceDate}</p>}
+                </div>
+
+                <div>
+                  <label htmlFor="experienceLocation" className="block text-sm font-medium text-limestone mb-1">
+                    Experience Location *
+                  </label>
+                  <input
+                    id="experienceLocation"
+                    type="text"
+                    value={formData.experienceLocation}
+                    onChange={(e) => updateFormData("experienceLocation", e.target.value)}
+                    className={`w-full bg-gray-900 border rounded-md p-2 text-parchment focus:ring-1 focus:ring-amber-dram transition ${
+                      errors.experienceLocation ? "border-red-400" : "border-gray-700 focus:border-amber-dram"
+                    }`}
+                    placeholder="e.g., A cozy pub in Edinburgh"
+                  />
+                  {errors.experienceLocation && (
+                    <p className="text-red-400 text-xs mt-1">{errors.experienceLocation}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <label htmlFor="narrative" className="block text-sm font-medium text-limestone mb-1">
+                  Narrative *
+                </label>
+                <textarea
+                  id="narrative"
+                  rows={4}
+                  value={formData.narrative}
+                  onChange={(e) => updateFormData("narrative", e.target.value)}
+                  className={`w-full bg-gray-900 border rounded-md p-2 text-parchment focus:ring-1 focus:ring-amber-dram transition ${
+                    errors.narrative ? "border-red-400" : "border-gray-700 focus:border-amber-dram"
+                  }`}
+                  placeholder="Tell the story of your experience with this whisky..."
+                />
+                {errors.narrative && <p className="text-red-400 text-xs mt-1">{errors.narrative}</p>}
+              </div>
+
+              <div className="mt-4">
+                <label htmlFor="finalVerdict" className="block text-sm font-medium text-limestone mb-1">
+                  Final Verdict *
+                </label>
+                <textarea
+                  id="finalVerdict"
+                  rows={2}
+                  value={formData.finalVerdict}
+                  onChange={(e) => updateFormData("finalVerdict", e.target.value)}
+                  className={`w-full bg-gray-900 border rounded-md p-2 text-parchment focus:ring-1 focus:ring-amber-dram transition ${
+                    errors.finalVerdict ? "border-red-400" : "border-gray-700 focus:border-amber-dram"
+                  }`}
+                  placeholder="Your final thoughts on this whisky..."
+                />
+                {errors.finalVerdict && <p className="text-red-400 text-xs mt-1">{errors.finalVerdict}</p>}
+              </div>
             </div>
-          </div>
 
-          <div className="mt-4">
-            <label htmlFor="narrative" className="block text-sm font-medium text-limestone mb-1">
-              Narrative *
-            </label>
-            <textarea
-              id="narrative"
-              rows={4}
-              value={formData.narrative}
-              onChange={(e) => updateFormData("narrative", e.target.value)}
-              className={`w-full bg-gray-900 border rounded-md p-2 text-parchment focus:ring-1 focus:ring-amber-dram transition ${
-                errors.narrative ? "border-red-400" : "border-gray-700 focus:border-amber-dram"
-              }`}
-              placeholder="Tell the story of your experience with this whisky..."
-            />
-            {errors.narrative && <p className="text-red-400 text-xs mt-1">{errors.narrative}</p>}
-          </div>
-
-          <div className="mt-4">
-            <label htmlFor="finalVerdict" className="block text-sm font-medium text-limestone mb-1">
-              Final Verdict *
-            </label>
-            <textarea
-              id="finalVerdict"
-              rows={2}
-              value={formData.finalVerdict}
-              onChange={(e) => updateFormData("finalVerdict", e.target.value)}
-              className={`w-full bg-gray-900 border rounded-md p-2 text-parchment focus:ring-1 focus:ring-amber-dram transition ${
-                errors.finalVerdict ? "border-red-400" : "border-gray-700 focus:border-amber-dram"
-              }`}
-              placeholder="Your final thoughts on this whisky..."
-            />
-            {errors.finalVerdict && <p className="text-red-400 text-xs mt-1">{errors.finalVerdict}</p>}
-          </div>
+            {/* Form Actions */}
+            <div className="flex gap-4">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="flex-1 bg-amber-dram text-parchment font-semibold py-3 rounded-lg hover:bg-amber-500 transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-parchment mr-2"></div>
+                    Adding Experience...
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4 mr-2" />
+                    Add to Memory Annex
+                  </>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={clearForm}
+                className="px-6 py-3 bg-gray-700 text-parchment rounded-lg hover:bg-gray-600 transition-colors"
+              >
+                Clear Form
+              </button>
+            </div>
+          </form>
         </div>
-
-        {/* Form Actions */}
-        <div className="flex gap-4">
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="flex-1 bg-amber-dram text-parchment font-semibold py-3 rounded-lg hover:bg-amber-500 transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isSubmitting ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-parchment mr-2"></div>
-                Adding Experience...
-              </>
-            ) : (
-              <>
-                <Save className="h-4 w-4 mr-2" />
-                Add to Memory Annex
-              </>
-            )}
-          </button>
-          <button
-            type="button"
-            onClick={clearForm}
-            className="px-6 py-3 bg-gray-700 text-parchment rounded-lg hover:bg-gray-600 transition-colors"
-          >
-            Clear Form
-          </button>
-        </div>
-      </form>
+      </div>
     </div>
   );
 }

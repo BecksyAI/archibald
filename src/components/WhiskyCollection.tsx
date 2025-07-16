@@ -81,8 +81,8 @@ export function WhiskyCollection({ className }: WhiskyCollectionProps) {
   }
 
   return (
-    <div className={`p-6 lg:p-10 ${className}`}>
-      <div className="mb-8">
+    <div className={`flex flex-col h-full ${className}`}>
+      <div className="flex-shrink-0 p-6 lg:p-8 border-b border-gray-700">
         <h1 className="font-serif text-3xl font-semibold text-parchment mb-2">Whisky Collection</h1>
         <p className="text-limestone">
           A curated collection of {memoryStats.totalCount} whisky experiences from around the world.
@@ -95,22 +95,24 @@ export function WhiskyCollection({ className }: WhiskyCollectionProps) {
         </div>
       </div>
 
-      {/* Search and Filter Controls */}
-      <div className="mb-6">
-        <div className="flex flex-col sm:flex-row gap-4 mb-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-limestone" />
-            <input
-              type="text"
-              placeholder="Search whiskies, distilleries, regions, or tasting notes..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-parchment focus:ring-1 focus:ring-amber-dram focus:border-amber-dram transition"
-            />
-          </div>
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className={`
+      <div className="flex-1 overflow-y-auto">
+        <div className="p-6 lg:p-8 space-y-6">
+          {/* Search and Filter Controls */}
+          <div className="mb-6">
+            <div className="flex flex-col sm:flex-row gap-4 mb-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-limestone" />
+                <input
+                  type="text"
+                  placeholder="Search whiskies, distilleries, regions, or tasting notes..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-parchment focus:ring-1 focus:ring-amber-dram focus:border-amber-dram transition"
+                />
+              </div>
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`
               flex items-center gap-2 px-4 py-2 rounded-lg transition-colors
               ${
                 showFilters || hasActiveFilters
@@ -118,127 +120,129 @@ export function WhiskyCollection({ className }: WhiskyCollectionProps) {
                   : "bg-gray-700 text-limestone hover:bg-gray-600"
               }
             `}
-          >
-            <Filter className="h-4 w-4" />
-            Filters
-            {hasActiveFilters && (
-              <span className="bg-parchment text-amber-dram text-xs px-2 py-1 rounded-full">Active</span>
-            )}
-          </button>
-        </div>
-
-        {/* Filter Panel */}
-        {showFilters && (
-          <div className="bg-aged-oak border border-gray-700 rounded-lg p-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-              <div>
-                <label className="text-sm font-medium text-limestone block mb-1">Region</label>
-                <select
-                  value={filterRegion}
-                  onChange={(e) => setFilterRegion(e.target.value)}
-                  className="w-full bg-gray-900 border border-gray-700 rounded-md p-2 text-parchment focus:ring-1 focus:ring-amber-dram focus:border-amber-dram transition"
-                >
-                  <option value="">All Regions</option>
-                  {uniqueRegions.map((region) => (
-                    <option key={region} value={region}>
-                      {region}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-limestone block mb-1">Distillery</label>
-                <select
-                  value={filterDistillery}
-                  onChange={(e) => setFilterDistillery(e.target.value)}
-                  className="w-full bg-gray-900 border border-gray-700 rounded-md p-2 text-parchment focus:ring-1 focus:ring-amber-dram focus:border-amber-dram transition"
-                >
-                  <option value="">All Distilleries</option>
-                  {uniqueDistilleries.map((distillery) => (
-                    <option key={distillery} value={distillery}>
-                      {distillery}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-limestone block mb-1">Source</label>
-                <select
-                  value={filterUserAdded === undefined ? "" : filterUserAdded.toString()}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setFilterUserAdded(value === "" ? undefined : value === "true");
-                  }}
-                  className="w-full bg-gray-900 border border-gray-700 rounded-md p-2 text-parchment focus:ring-1 focus:ring-amber-dram focus:border-amber-dram transition"
-                >
-                  <option value="">All Sources</option>
-                  <option value="false">Core Memory</option>
-                  <option value="true">Memory Annex</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-limestone block mb-1">Min Age</label>
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  placeholder="Min age"
-                  value={filterMinAge}
-                  onChange={(e) => setFilterMinAge(e.target.value ? parseInt(e.target.value) : "")}
-                  className="w-full bg-gray-900 border border-gray-700 rounded-md p-2 text-parchment focus:ring-1 focus:ring-amber-dram focus:border-amber-dram transition"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-limestone block mb-1">Max Age</label>
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  placeholder="Max age"
-                  value={filterMaxAge}
-                  onChange={(e) => setFilterMaxAge(e.target.value ? parseInt(e.target.value) : "")}
-                  className="w-full bg-gray-900 border border-gray-700 rounded-md p-2 text-parchment focus:ring-1 focus:ring-amber-dram focus:border-amber-dram transition"
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end">
-              <button
-                onClick={clearFilters}
-                className="px-4 py-2 bg-gray-700 text-limestone rounded-lg hover:bg-gray-600 transition-colors"
               >
-                Clear Filters
+                <Filter className="h-4 w-4" />
+                Filters
+                {hasActiveFilters && (
+                  <span className="bg-parchment text-amber-dram text-xs px-2 py-1 rounded-full">Active</span>
+                )}
               </button>
             </div>
+
+            {/* Filter Panel */}
+            {showFilters && (
+              <div className="bg-aged-oak border border-gray-700 rounded-lg p-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                  <div>
+                    <label className="text-sm font-medium text-limestone block mb-1">Region</label>
+                    <select
+                      value={filterRegion}
+                      onChange={(e) => setFilterRegion(e.target.value)}
+                      className="w-full bg-gray-900 border border-gray-700 rounded-md p-2 text-parchment focus:ring-1 focus:ring-amber-dram focus:border-amber-dram transition"
+                    >
+                      <option value="">All Regions</option>
+                      {uniqueRegions.map((region) => (
+                        <option key={region} value={region}>
+                          {region}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-limestone block mb-1">Distillery</label>
+                    <select
+                      value={filterDistillery}
+                      onChange={(e) => setFilterDistillery(e.target.value)}
+                      className="w-full bg-gray-900 border border-gray-700 rounded-md p-2 text-parchment focus:ring-1 focus:ring-amber-dram focus:border-amber-dram transition"
+                    >
+                      <option value="">All Distilleries</option>
+                      {uniqueDistilleries.map((distillery) => (
+                        <option key={distillery} value={distillery}>
+                          {distillery}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-limestone block mb-1">Source</label>
+                    <select
+                      value={filterUserAdded === undefined ? "" : filterUserAdded.toString()}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setFilterUserAdded(value === "" ? undefined : value === "true");
+                      }}
+                      className="w-full bg-gray-900 border border-gray-700 rounded-md p-2 text-parchment focus:ring-1 focus:ring-amber-dram focus:border-amber-dram transition"
+                    >
+                      <option value="">All Sources</option>
+                      <option value="false">Core Memory</option>
+                      <option value="true">Memory Annex</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-limestone block mb-1">Min Age</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      placeholder="Min age"
+                      value={filterMinAge}
+                      onChange={(e) => setFilterMinAge(e.target.value ? parseInt(e.target.value) : "")}
+                      className="w-full bg-gray-900 border border-gray-700 rounded-md p-2 text-parchment focus:ring-1 focus:ring-amber-dram focus:border-amber-dram transition"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-limestone block mb-1">Max Age</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      placeholder="Max age"
+                      value={filterMaxAge}
+                      onChange={(e) => setFilterMaxAge(e.target.value ? parseInt(e.target.value) : "")}
+                      className="w-full bg-gray-900 border border-gray-700 rounded-md p-2 text-parchment focus:ring-1 focus:ring-amber-dram focus:border-amber-dram transition"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end">
+                  <button
+                    onClick={clearFilters}
+                    className="px-4 py-2 bg-gray-700 text-limestone rounded-lg hover:bg-gray-600 transition-colors"
+                  >
+                    Clear Filters
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-        )}
-      </div>
 
-      {/* Results */}
-      <div className="mb-4">
-        <p className="text-limestone">
-          Showing {filteredExperiences.length} of {allExperiences.length} experiences
-        </p>
-      </div>
+          {/* Results */}
+          <div className="mb-4">
+            <p className="text-limestone">
+              Showing {filteredExperiences.length} of {allExperiences.length} experiences
+            </p>
+          </div>
 
-      {/* Whisky Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        {filteredExperiences.map((experience) => (
-          <WhiskyCard key={experience.id} experience={experience} isFromAnnex={isUserExperience(experience.id)} />
-        ))}
-      </div>
+          {/* Whisky Cards */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            {filteredExperiences.map((experience) => (
+              <WhiskyCard key={experience.id} experience={experience} isFromAnnex={isUserExperience(experience.id)} />
+            ))}
+          </div>
 
-      {filteredExperiences.length === 0 && (
-        <div className="text-center py-12">
-          <Wine className="h-12 w-12 text-limestone mx-auto mb-4" />
-          <p className="text-limestone text-lg">No whiskies found matching your criteria.</p>
-          <p className="text-limestone/70 text-sm mt-2">Try adjusting your search terms or filters.</p>
+          {filteredExperiences.length === 0 && (
+            <div className="text-center py-12">
+              <Wine className="h-12 w-12 text-limestone mx-auto mb-4" />
+              <p className="text-limestone text-lg">No whiskies found matching your criteria.</p>
+              <p className="text-limestone/70 text-sm mt-2">Try adjusting your search terms or filters.</p>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

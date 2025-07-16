@@ -52,6 +52,13 @@ export function Sidebar({ activeTab, onTabChange, isCollapsed = false, onToggleC
     }
   }, [settings, isEditingSettings]);
 
+  // Auto-open settings edit mode when not configured
+  useEffect(() => {
+    if (!isConfigured && !isEditingSettings) {
+      setIsEditingSettings(true);
+    }
+  }, [isConfigured, isEditingSettings]);
+
   const handleStartEdit = () => {
     setTempSettings({
       apiKey: settings.apiKey,
@@ -68,6 +75,14 @@ export function Sidebar({ activeTab, onTabChange, isCollapsed = false, onToggleC
       // This prevents race conditions where updates could be overwritten.
       updateSettings(tempSettings);
       setIsEditingSettings(false);
+
+      // Auto-switch to chat tab when settings are successfully saved
+      // Use a small delay to ensure settings are fully updated
+      setTimeout(() => {
+        if (tempSettings.apiKey.trim()) {
+          onTabChange("chat");
+        }
+      }, 100);
     } catch (error) {
       console.error("Error saving settings:", error);
     }

@@ -209,17 +209,27 @@ export function Sidebar({
                 Access Credential (API Key)
               </label>
               {isEditingSettings ? (
-                <input
-                  id="api-key"
-                  type="password"
-                  value={tempSettings.apiKey}
-                  onChange={(e) => setTempSettings((prev) => ({ ...prev, apiKey: e.target.value }))}
-                  className="w-full bg-gray-900 border border-gray-700 rounded-md p-2 text-parchment focus:ring-1 focus:ring-amber-dram focus:border-amber-dram transition"
-                  placeholder="Enter your API key"
-                />
+                <div className="relative">
+                  <input
+                    id="api-key"
+                    type="password"
+                    value={tempSettings.apiKey}
+                    onChange={(e) => setTempSettings({ ...tempSettings, apiKey: e.target.value })}
+                    className="w-full bg-gray-900 border border-gray-700 rounded-lg py-2 px-3 text-parchment focus:ring-2 focus:ring-amber-dram focus:border-amber-dram transition"
+                  />
+                  {tempSettings.apiKey && (
+                    <button
+                      onClick={() => setTempSettings({ ...tempSettings, apiKey: "" })}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-limestone hover:text-red-400 transition-colors"
+                      title="Clear API Key"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
               ) : (
-                <div className="w-full bg-gray-900 border border-gray-700 rounded-md p-2 text-parchment">
-                  {getMaskedApiKey() || "Not configured"}
+                <div className="bg-gray-900 border border-gray-700 rounded-lg py-2 px-3 text-limestone font-mono text-sm truncate">
+                  {getMaskedApiKey() || "Not Set"}
                 </div>
               )}
             </div>

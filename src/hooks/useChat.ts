@@ -193,23 +193,47 @@ Remember: You are not a helpful assistant. You are A.I. Sterling, and you will r
       abortControllerRef.current = new AbortController();
 
       try {
+        let requestBody;
+
+        if (settings.llmProvider === "openai") {
+          requestBody = {
+            model: config.model,
+            messages: formattedMessages,
+            temperature: settings.temperature,
+            max_tokens: settings.maxTokens,
+          };
+        } else if (settings.llmProvider === "claude") {
+          requestBody = {
+            model: config.model,
+            ...formattedMessages,
+            temperature: settings.temperature,
+            max_tokens: settings.maxTokens,
+          };
+        } else if (settings.llmProvider === "gemini") {
+          requestBody = formattedMessages; // Gemini uses different format
+        } else {
+          throw new Error(`Unsupported provider: ${settings.llmProvider}`);
+        }
+
+        console.log(`[useChat] Sending request to ${settings.llmProvider}:`, {
+          url: config.apiUrl,
+          body: requestBody,
+        });
+
         const response = await fetch(config.apiUrl, {
           method: "POST",
           headers: config.headers,
-          body: JSON.stringify(
-            settings.llmProvider === "gemini"
-              ? formattedMessages // Gemini uses different format
-              : {
-                  ...formattedMessages,
-                  model: config.model,
-                  temperature: settings.temperature,
-                  max_tokens: settings.maxTokens,
-                }
-          ),
+          body: JSON.stringify(requestBody),
           signal: abortControllerRef.current.signal,
         });
 
         if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`[useChat] API Error Response:`, {
+            status: response.status,
+            statusText: response.statusText,
+            body: errorText,
+          });
           throw new APIError(`API request failed: ${response.status} ${response.statusText}`, response.status);
         }
 

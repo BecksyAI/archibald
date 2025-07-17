@@ -82,6 +82,7 @@ export function Sidebar({
 
   const handleSaveSettings = () => {
     try {
+      console.log("[Sidebar] Saving settings:", tempSettings);
       updateSettings(tempSettings);
       setIsEditingSettings(false);
 
@@ -90,11 +91,13 @@ export function Sidebar({
 
       // Always switch to chat after saving settings
       if (tempSettings.apiKey.trim()) {
+        console.log("[Sidebar] API key present, switching to chat");
         onTabChange("chat");
       }
 
       // Add a small delay to ensure state has propagated
       setTimeout(() => {
+        console.log("[Sidebar] Post-save state check");
         onSettingsSave(); // Force another re-render
       }, 100);
     } catch (error) {

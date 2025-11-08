@@ -2,11 +2,11 @@
  * Quick script to add image to Glenfiddich 12 entry
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
 import WhiskyEntry from '@/lib/models/WhiskyEntry';
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
     await connectDB();
 

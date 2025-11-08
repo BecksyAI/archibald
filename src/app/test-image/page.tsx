@@ -17,6 +17,7 @@ export default function TestImagePage() {
         <div className="bg-aged-oak border border-gray-700 rounded-lg p-6 hover:border-amber-dram/50 transition-colors">
           {/* Whisky Image */}
           <div className="mb-4 aspect-video bg-gray-900 rounded-lg overflow-hidden">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/glen12.png"
               alt="Glenfiddich 12"
@@ -59,8 +60,8 @@ export default function TestImagePage() {
           <h2 className="text-lg font-semibold text-parchment mb-2">How to add this image to a whisky entry:</h2>
           <ol className="list-decimal list-inside space-y-2 text-limestone text-sm">
             <li>Go to the Whisky Collection page</li>
-            <li>Click "Add Whisky" button</li>
-            <li>Fill in the whisky details (Name: "Glenfiddich 12", Country: "Scotland", etc.)</li>
+            <li>Click &quot;Add Whisky&quot; button</li>
+            <li>Fill in the whisky details (Name: &quot;Glenfiddich 12&quot;, Country: &quot;Scotland&quot;, etc.)</li>
             <li>In the images field, add: <code className="bg-gray-800 px-2 py-1 rounded">/glen12.png</code></li>
             <li>Submit the form</li>
           </ol>

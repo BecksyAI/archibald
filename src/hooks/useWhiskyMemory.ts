@@ -72,11 +72,10 @@ export function useWhiskyMemory() {
   useEffect(() => {
     try {
       // Validate each experience in core memory
-      const validatedCoreMemory = coreMemoryData.map((exp, index) => {
+      const validatedCoreMemory = coreMemoryData.map((exp) => {
         try {
           return sanitizeWhiskyExperience(exp);
         } catch (error) {
-          console.error(`[useWhiskyMemory] Invalid core memory experience at index ${index}:`, error);
           throw error;
         }
       });
@@ -86,7 +85,6 @@ export function useWhiskyMemory() {
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to load core memory";
       setCoreMemoryError(message);
-      console.error("[useWhiskyMemory] Error loading core memory:", error);
     }
   }, []);
 
@@ -124,7 +122,6 @@ export function useWhiskyMemory() {
 
         return newExperience;
       } catch (error) {
-        console.error("[useWhiskyMemory] Error adding experience:", error);
         throw error;
       }
     },

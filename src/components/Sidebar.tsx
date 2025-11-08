@@ -5,10 +5,12 @@
 
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { MessageSquare, Library, FilePlus2, Settings, Save, X, Menu, Trash2 } from "lucide-react";
-import { useSettings } from "@/hooks/useSettings";
-import { LLMProvider } from "@/lib/types";
+import React from "react";
+import { MessageSquare, Library, FilePlus2, X, Menu, Calendar, Sun, Moon, Shield, Settings } from "lucide-react";
+import { AuthButton } from "./AuthButton";
+import { MigrationButton } from "./MigrationButton";
+import { useTheme } from "@/contexts/ThemeContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface SidebarProps {
   activeTab: string;
@@ -16,6 +18,7 @@ interface SidebarProps {
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
   onSettingsSave: () => void; // Callback to notify parent of save
+  mobileMenuOpen?: boolean;
 }
 
 /**
@@ -28,120 +31,27 @@ export function Sidebar({
   onTabChange,
   isCollapsed = false,
   onToggleCollapse,
-  onSettingsSave,
+  mobileMenuOpen = false,
 }: SidebarProps) {
-  const [isEditingSettings, setIsEditingSettings] = useState(false);
-  const {
-    settings,
-    updateSettings, // Use the bulk updater
-    validateSettings,
-    getMaskedApiKey,
-    isConfigured,
-    error,
-    isHydrated,
-    clearAllData,
-  } = useSettings();
-
-  const [tempSettings, setTempSettings] = useState({
-    apiKey: settings.apiKey,
-    llmProvider: settings.llmProvider,
-    temperature: settings.temperature,
-    maxTokens: settings.maxTokens,
-  });
-
-  // Update temp settings when settings change (e.g., loaded from localStorage)
-  useEffect(() => {
-    if (!isEditingSettings) {
-      setTempSettings({
-        apiKey: settings.apiKey,
-        llmProvider: settings.llmProvider,
-        temperature: settings.temperature,
-        maxTokens: settings.maxTokens,
-      });
-    }
-  }, [settings, isEditingSettings]);
-
-  // Auto-open settings edit mode only on initial load if not configured
-  const [hasBeenAutoOpened, setHasBeenAutoOpened] = useState(false);
-  useEffect(() => {
-    if (isHydrated && !isConfigured && !hasBeenAutoOpened) {
-      setIsEditingSettings(true);
-      setHasBeenAutoOpened(true);
-    }
-  }, [isHydrated, isConfigured, hasBeenAutoOpened]);
-
-  const handleStartEdit = () => {
-    setTempSettings({
-      apiKey: settings.apiKey,
-      llmProvider: settings.llmProvider,
-      temperature: settings.temperature,
-      maxTokens: settings.maxTokens,
-    });
-    setIsEditingSettings(true);
-  };
-
-  const handleSaveSettings = () => {
-    try {
-      console.log("[Sidebar] Saving settings:", tempSettings);
-      updateSettings(tempSettings);
-      setIsEditingSettings(false);
-
-      // Force immediate re-render
-      onSettingsSave();
-
-      // Always switch to chat after saving settings
-      if (tempSettings.apiKey.trim()) {
-        console.log("[Sidebar] API key present, switching to chat");
-        onTabChange("chat");
-      }
-
-      // Add a small delay to ensure state has propagated
-      setTimeout(() => {
-        console.log("[Sidebar] Post-save state check");
-        onSettingsSave(); // Force another re-render
-      }, 100);
-    } catch (error) {
-      console.error("Error saving settings:", error);
-    }
-  };
-
-  const handleClearSettings = () => {
-    // Clear just the API key
-    updateSettings({ ...settings, apiKey: "" });
-    setIsEditingSettings(false);
-    onSettingsSave(); // Force a re-render
-  };
-
-  const handleClearAllData = () => {
-    const confirmMessage =
-      "Are you certain you wish to clear ALL data? This will remove:\n\n• API Key & Settings\n• Chat History\n• Memory Annex Entries\n• All Stored Data\n\nThis action cannot be undone.";
-
-    if (window.confirm(confirmMessage)) {
-      const result = clearAllData();
-      if (result.success) {
-        alert(`Successfully cleared ${result.clearedKeys.length} data keys:\n${result.clearedKeys.join("\n")}`);
-        onSettingsSave(); // Force re-render
-      } else {
-        alert("Failed to clear all data. Please try again.");
-      }
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setIsEditingSettings(false);
-  };
+  const { theme, toggleTheme } = useTheme();
+  const { user } = useAuth();
 
   const navItems = [
     { id: "chat", label: "Chat", icon: MessageSquare },
-    { id: "collection", label: "Whisky Collection", icon: Library },
+    { id: "collection", label: "Collection", icon: Library },
+    { id: "events", label: "Events", icon: Calendar },
     { id: "memory-annex", label: "Memory Annex", icon: FilePlus2 },
+    ...(user && (user.role === 'admin' || user.role === 'superadmin') ? [
+      { id: "admin", label: "Admin", icon: Settings },
+    ] : []),
+    ...(user && user.role === 'superadmin' ? [
+      { id: "superadmin", label: "Super Admin", icon: Shield },
+    ] : []),
   ];
-
-  const validation = validateSettings();
 
   if (isCollapsed) {
     return (
-      <div className="w-16 flex-shrink-0 bg-aged-oak border-r border-gray-700 flex flex-col">
+      <div className="w-16 flex-shrink-0 bg-aged-oak dark:bg-aged-oak bg-light-surface border-r border-gray-700 dark:border-gray-700 border-light-border flex flex-col">
         <button onClick={onToggleCollapse} className="p-4 text-limestone hover:text-parchment transition-colors">
           <Menu className="h-6 w-6" />
         </button>
@@ -169,195 +79,76 @@ export function Sidebar({
   }
 
   return (
-    <aside className="w-80 flex-shrink-0 bg-aged-oak p-6 flex flex-col justify-between">
-      <div>
-        <header className="mb-10">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="font-serif text-3xl font-semibold text-parchment">The Athenaeum</h1>
-              <p className="text-limestone text-sm mt-1">A private collection of spirits & data.</p>
-            </div>
-            {onToggleCollapse && (
-              <button
-                onClick={onToggleCollapse}
-                className="p-2 text-limestone hover:text-parchment transition-colors md:hidden"
-              >
-                <X className="h-6 w-6" />
-              </button>
-            )}
-          </div>
-          {!isConfigured && (
-            <div className="mt-4 p-3 bg-red-900/20 border border-red-400/50 rounded-lg">
-              <p className="text-red-400 text-sm">Configuration required. Please set your API key in settings.</p>
-            </div>
-          )}
-        </header>
-
-        <nav className="flex flex-col space-y-2 mb-10">
-          {navItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => onTabChange(item.id)}
-              className={`
-                flex items-center p-3 rounded-lg transition-colors
-                ${
-                  activeTab === item.id
-                    ? "text-parchment bg-amber-dram/10 border border-amber-dram/50"
-                    : "text-limestone hover:bg-gray-700/50 hover:text-parchment"
-                }
-              `}
-            >
-              <item.icon className={`h-5 w-5 mr-3 ${activeTab === item.id ? "text-amber-dram" : ""}`} />
-              <span className="font-semibold">{item.label}</span>
-            </button>
-          ))}
-        </nav>
-
-        {/* Settings Panel */}
-        <div className="border-t border-gray-700 pt-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-serif text-xl text-parchment">System Configuration</h2>
-            {!isEditingSettings && (
-              <button
-                onClick={handleStartEdit}
-                className="text-limestone hover:text-amber-dram transition-colors"
-                title="Edit settings"
-              >
-                <Settings className="h-4 w-4" />
-              </button>
-            )}
-          </div>
-
-          {error && (
-            <div className="mb-4 p-3 bg-red-900/20 border border-red-400/50 rounded-lg">
-              <p className="text-red-400 text-sm">{error}</p>
-            </div>
-          )}
-
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="api-key" className="text-sm font-medium text-limestone block mb-1">
-                Access Credential (API Key)
-              </label>
-              {isEditingSettings ? (
-                <div className="relative">
-                  <input
-                    id="api-key"
-                    type="password"
-                    value={tempSettings.apiKey}
-                    onChange={(e) => setTempSettings({ ...tempSettings, apiKey: e.target.value })}
-                    className="w-full bg-gray-900 border border-gray-700 rounded-lg py-2 px-3 text-parchment focus:ring-2 focus:ring-amber-dram focus:border-amber-dram transition"
-                  />
-                </div>
-              ) : (
-                <div className="bg-gray-900 border border-gray-700 rounded-lg py-2 px-3 text-limestone font-mono text-sm truncate">
-                  {getMaskedApiKey() || "Not Set"}
-                </div>
+    <>
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={onToggleCollapse}
+          aria-hidden="true"
+        />
+      )}
+      <aside className={`${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 fixed md:static inset-y-0 left-0 z-50 w-80 flex-shrink-0 bg-aged-oak dark:bg-aged-oak bg-light-surface border-r border-gray-700 dark:border-gray-700 border-light-border p-4 md:p-6 flex flex-col justify-between transition-transform duration-300`}>
+        <div>
+          <header className="mb-10">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="font-serif text-3xl font-semibold text-parchment dark:text-parchment text-light-text">The Athenaeum</h1>
+                <p className="text-limestone text-sm mt-1">A private collection of spirits & data.</p>
+              </div>
+              {onToggleCollapse && (
+                <button
+                  onClick={onToggleCollapse}
+                  className="p-2 text-limestone hover:text-parchment transition-colors md:hidden"
+                  aria-label="Close sidebar"
+                >
+                  <X className="h-6 w-6" />
+                </button>
               )}
             </div>
+          </header>
 
-            <div>
-              <label htmlFor="llm-provider" className="text-sm font-medium text-limestone block mb-1">
-                Logic Core (LLM Provider)
-              </label>
-              {isEditingSettings ? (
-                <select
-                  id="llm-provider"
-                  value={tempSettings.llmProvider}
-                  onChange={(e) => setTempSettings((prev) => ({ ...prev, llmProvider: e.target.value as LLMProvider }))}
-                  className="w-full bg-gray-900 border border-gray-700 rounded-md p-2 text-parchment focus:ring-1 focus:ring-amber-dram focus:border-amber-dram transition"
-                >
-                  <option value="openai">OpenAI</option>
-                  <option value="claude">Claude</option>
-                  <option value="gemini">Gemini</option>
-                </select>
-              ) : (
-                <div className="w-full bg-gray-900 border border-gray-700 rounded-md p-2 text-parchment capitalize">
-                  {settings.llmProvider}
-                </div>
-              )}
-            </div>
-
-            {isEditingSettings && (
-              <>
-                <div>
-                  <label htmlFor="temperature" className="text-sm font-medium text-limestone block mb-1">
-                    Temperature ({tempSettings.temperature})
-                  </label>
-                  <input
-                    id="temperature"
-                    type="range"
-                    min="0"
-                    max="2"
-                    step="0.1"
-                    value={tempSettings.temperature}
-                    onChange={(e) => setTempSettings((prev) => ({ ...prev, temperature: parseFloat(e.target.value) }))}
-                    className="w-full accent-amber-dram"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="max-tokens" className="text-sm font-medium text-limestone block mb-1">
-                    Max Tokens
-                  </label>
-                  <input
-                    id="max-tokens"
-                    type="number"
-                    min="1"
-                    max="4000"
-                    value={tempSettings.maxTokens}
-                    onChange={(e) => setTempSettings((prev) => ({ ...prev, maxTokens: parseInt(e.target.value) }))}
-                    className="w-full bg-gray-900 border border-gray-700 rounded-md p-2 text-parchment focus:ring-1 focus:ring-amber-dram focus:border-amber-dram transition"
-                  />
-                </div>
-              </>
-            )}
-
-            {isEditingSettings ? (
-              <div className="flex flex-col space-y-2">
-                <button
-                  onClick={handleSaveSettings}
-                  className="bg-amber-dram text-parchment font-semibold py-2 rounded-lg hover:bg-amber-500 transition-colors flex items-center justify-center"
-                >
-                  <Save className="h-4 w-4 mr-2" />
-                  Save Settings
-                </button>
-                <div className="flex space-x-2">
-                  <button
-                    onClick={handleClearSettings}
-                    className="flex-1 px-3 py-2 bg-red-700 text-parchment rounded-lg hover:bg-red-600 transition-colors text-sm"
-                  >
-                    Clear API Key
-                  </button>
-                  <button
-                    onClick={handleCancelEdit}
-                    className="flex-1 px-3 py-2 bg-gray-700 text-parchment rounded-lg hover:bg-gray-600 transition-colors text-sm"
-                  >
-                    Cancel
-                  </button>
-                </div>
-                <button
-                  onClick={handleClearAllData}
-                  className="w-full px-3 py-2 bg-red-800 text-parchment rounded-lg hover:bg-red-700 transition-colors text-sm flex items-center justify-center"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Clear All Data
-                </button>
-              </div>
-            ) : (
-              <div className="text-xs text-limestone/70">
-                <p>Status: {isConfigured ? "Configured" : "Not configured"}</p>
-                {!validation.isValid && <p className="text-red-400 mt-1">{validation.errors.join(", ")}</p>}
-              </div>
-            )}
-          </div>
+          <nav className="flex flex-col space-y-2 mb-10">
+            {navItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => onTabChange(item.id)}
+                className={`
+                  flex items-center p-3 rounded-lg transition-colors
+                  ${
+                    activeTab === item.id
+                      ? "text-parchment bg-amber-dram/10 border border-amber-dram/50"
+                      : "text-limestone hover:bg-gray-700/50 hover:text-parchment"
+                  }
+                `}
+              >
+                <item.icon className={`h-5 w-5 mr-3 ${activeTab === item.id ? "text-amber-dram" : ""}`} />
+                <span className="font-semibold">{item.label}</span>
+              </button>
+            ))}
+          </nav>
         </div>
-      </div>
 
-      <footer className="text-center text-xs text-limestone/50">
-        <p>A.I. Sterling - Session Protocol 4.7</p>
-        <p>© Current Epoch. All Rights Reserved.</p>
-      </footer>
-    </aside>
+        <footer className="border-t border-gray-700 dark:border-gray-700 border-light-border pt-6">
+          <div className="mb-4">
+            <MigrationButton />
+            <AuthButton />
+          </div>
+          {!user && (
+            <div className="mb-4">
+              <button
+                onClick={toggleTheme}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gray-700 dark:bg-gray-700 bg-gray-200 text-gray-700 dark:text-limestone text-light-text font-semibold rounded-lg hover:bg-gray-600 dark:hover:bg-gray-600 transition-colors"
+              >
+                {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+                {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
+              </button>
+            </div>
+          )}
+          <div className="text-center text-xs text-limestone/50 dark:text-limestone/50 text-light-text-secondary/50">
+            <p>Made with ❤️ by PureFunction AI</p>
+          </div>
+        </footer>
+      </aside>
+    </>
   );
 }

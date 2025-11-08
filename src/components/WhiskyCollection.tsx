@@ -1,14 +1,15 @@
 /**
  * Whisky Collection viewer component
- * Part of Archibald's Athenaeum - M3: Sidebar & Static Components
+ * Updated to use database structure
  */
 
 "use client";
 
-import React, { useState, useMemo } from "react";
-import { Search, Filter, MapPin, Calendar, Wine, Percent } from "lucide-react";
-import { useWhiskyMemory } from "@/hooks/useWhiskyMemory";
-import { WhiskyExperience } from "@/lib/types";
+import React, { useState, useEffect, useMemo } from "react";
+import { Search, Filter, MapPin, Calendar, Wine, Plus, Image as ImageIcon } from "lucide-react";
+import { WhiskyEntry } from "@/lib/types";
+import { useAuth } from "@/contexts/AuthContext";
+import { AddWhiskyModal } from "./AddWhiskyModal";
 
 interface WhiskyCollectionProps {
   className?: string;
@@ -16,59 +17,92 @@ interface WhiskyCollectionProps {
 
 /**
  * Component for viewing and searching the complete whisky collection
- * @param props - Component props
- * @returns WhiskyCollection component
  */
 export function WhiskyCollection({ className }: WhiskyCollectionProps) {
-  const {
-    allExperiences,
-    searchExperiences,
-    getUniqueRegions,
-    getUniqueDistilleries,
-    getMemoryStats,
-    isUserExperience,
-    error,
-  } = useWhiskyMemory();
-
+  const [whiskies, setWhiskies] = useState<WhiskyEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterRegion, setFilterRegion] = useState<string>("");
-  const [filterDistillery, setFilterDistillery] = useState<string>("");
-  const [filterMinAge, setFilterMinAge] = useState<number | "">("");
-  const [filterMaxAge, setFilterMaxAge] = useState<number | "">("");
-  const [filterUserAdded, setFilterUserAdded] = useState<boolean | undefined>(undefined);
+  const [filterCountry, setFilterCountry] = useState<string>("");
+  const [filterHost, setFilterHost] = useState<string>("");
   const [showFilters, setShowFilters] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const { user } = useAuth();
 
-  const uniqueRegions = useMemo(() => getUniqueRegions(), [getUniqueRegions]);
-  const uniqueDistilleries = useMemo(() => getUniqueDistilleries(), [getUniqueDistilleries]);
-  const memoryStats = useMemo(() => getMemoryStats(), [getMemoryStats]);
+  useEffect(() => {
+    fetchWhiskies();
+    // Auto-add image to Glenfiddich 12 entry if it exists
+    const addImageToGlenfiddich = async () => {
+      try {
+        await fetch('/api/whisky/update-glenfiddich', { method: 'POST' });
+      } catch {
+        // Silently fail - not critical
+      }
+    };
+    addImageToGlenfiddich();
+  }, []);
 
-  const filteredExperiences = useMemo(() => {
-    return searchExperiences(searchQuery, {
-      region: filterRegion || undefined,
-      distillery: filterDistillery || undefined,
-      minAge: filterMinAge !== "" ? filterMinAge : undefined,
-      maxAge: filterMaxAge !== "" ? filterMaxAge : undefined,
-      isUserAdded: filterUserAdded,
+  const fetchWhiskies = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/whisky');
+      const data = await response.json();
+
+      if (response.ok) {
+        setWhiskies(data.whiskies || []);
+      } else {
+        setError(data.error || 'Failed to load whiskies');
+      }
+    } catch {
+      setError('Failed to load whiskies');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const uniqueCountries = useMemo(() => {
+    const countries = new Set(whiskies.map((w) => w.countryOfOrigin));
+    return Array.from(countries).sort();
+  }, [whiskies]);
+
+  const uniqueHosts = useMemo(() => {
+    const hosts = new Set(whiskies.map((w) => w.host));
+    return Array.from(hosts).sort();
+  }, [whiskies]);
+
+  const filteredWhiskies = useMemo(() => {
+    return whiskies.filter((whisky) => {
+      const matchesSearch =
+        !searchQuery ||
+        whisky.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        whisky.countryOfOrigin.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        whisky.description?.toLowerCase().includes(searchQuery.toLowerCase());
+
+      const matchesCountry = !filterCountry || whisky.countryOfOrigin === filterCountry;
+      const matchesHost = !filterHost || whisky.host === filterHost;
+
+      return matchesSearch && matchesCountry && matchesHost;
     });
-  }, [searchQuery, filterRegion, filterDistillery, filterMinAge, filterMaxAge, filterUserAdded, searchExperiences]);
+  }, [whiskies, searchQuery, filterCountry, filterHost]);
 
   const clearFilters = () => {
     setSearchQuery("");
-    setFilterRegion("");
-    setFilterDistillery("");
-    setFilterMinAge("");
-    setFilterMaxAge("");
-    setFilterUserAdded(undefined);
+    setFilterCountry("");
+    setFilterHost("");
   };
 
-  const hasActiveFilters = Boolean(
-    searchQuery ||
-      filterRegion ||
-      filterDistillery ||
-      filterMinAge !== "" ||
-      filterMaxAge !== "" ||
-      filterUserAdded !== undefined
-  );
+  const hasActiveFilters = Boolean(searchQuery || filterCountry || filterHost);
+
+  if (loading) {
+    return (
+      <div className={`flex items-center justify-center h-full ${className}`}>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-dram mx-auto mb-4"></div>
+          <p className="text-limestone">Loading collection...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (error) {
     return (
@@ -82,241 +116,216 @@ export function WhiskyCollection({ className }: WhiskyCollectionProps) {
 
   return (
     <div className={`flex flex-col h-full ${className}`}>
-      <div className="flex-shrink-0 p-6 lg:p-8 border-b border-gray-700">
-        <h1 className="font-serif text-3xl font-semibold text-parchment mb-2">Whisky Collection</h1>
-        <p className="text-limestone">
-          A curated collection of {memoryStats.totalCount} whisky experiences from around the world.
-        </p>
-        <div className="flex flex-wrap gap-4 mt-4 text-sm text-limestone">
-          <span>Core Memory: {memoryStats.coreCount}</span>
-          <span>Memory Annex: {memoryStats.userCount}</span>
-          <span>Regions: {uniqueRegions.length}</span>
-          <span>Distilleries: {uniqueDistilleries.length}</span>
-        </div>
-      </div>
-
-      <div className="flex-1 overflow-y-auto">
-        <div className="p-6 lg:p-8 space-y-6">
-          {/* Search and Filter Controls */}
-          <div className="mb-6">
-            <div className="flex flex-col sm:flex-row gap-4 mb-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-limestone" />
-                <input
-                  type="text"
-                  placeholder="Search whiskies, distilleries, regions, or tasting notes..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-gray-900 border border-gray-700 rounded-lg text-parchment focus:ring-1 focus:ring-amber-dram focus:border-amber-dram transition"
-                />
-              </div>
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className={`
-              flex items-center gap-2 px-4 py-2 rounded-lg transition-colors
-              ${
-                showFilters || hasActiveFilters
-                  ? "bg-amber-dram text-parchment"
-                  : "bg-gray-700 text-limestone hover:bg-gray-600"
-              }
-            `}
-              >
-                <Filter className="h-4 w-4" />
-                Filters
-                {hasActiveFilters && (
-                  <span className="bg-parchment text-amber-dram text-xs px-2 py-1 rounded-full">Active</span>
-                )}
-              </button>
-            </div>
-
-            {/* Filter Panel */}
-            {showFilters && (
-              <div className="bg-aged-oak border border-gray-700 rounded-lg p-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-                  <div>
-                    <label className="text-sm font-medium text-limestone block mb-1">Region</label>
-                    <select
-                      value={filterRegion}
-                      onChange={(e) => setFilterRegion(e.target.value)}
-                      className="w-full bg-gray-900 border border-gray-700 rounded-md p-2 text-parchment focus:ring-1 focus:ring-amber-dram focus:border-amber-dram transition"
-                    >
-                      <option value="">All Regions</option>
-                      {uniqueRegions.map((region) => (
-                        <option key={region} value={region}>
-                          {region}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium text-limestone block mb-1">Distillery</label>
-                    <select
-                      value={filterDistillery}
-                      onChange={(e) => setFilterDistillery(e.target.value)}
-                      className="w-full bg-gray-900 border border-gray-700 rounded-md p-2 text-parchment focus:ring-1 focus:ring-amber-dram focus:border-amber-dram transition"
-                    >
-                      <option value="">All Distilleries</option>
-                      {uniqueDistilleries.map((distillery) => (
-                        <option key={distillery} value={distillery}>
-                          {distillery}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium text-limestone block mb-1">Source</label>
-                    <select
-                      value={filterUserAdded === undefined ? "" : filterUserAdded.toString()}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        setFilterUserAdded(value === "" ? undefined : value === "true");
-                      }}
-                      className="w-full bg-gray-900 border border-gray-700 rounded-md p-2 text-parchment focus:ring-1 focus:ring-amber-dram focus:border-amber-dram transition"
-                    >
-                      <option value="">All Sources</option>
-                      <option value="false">Core Memory</option>
-                      <option value="true">Memory Annex</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium text-limestone block mb-1">Min Age</label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      placeholder="Min age"
-                      value={filterMinAge}
-                      onChange={(e) => setFilterMinAge(e.target.value ? parseInt(e.target.value) : "")}
-                      className="w-full bg-gray-900 border border-gray-700 rounded-md p-2 text-parchment focus:ring-1 focus:ring-amber-dram focus:border-amber-dram transition"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium text-limestone block mb-1">Max Age</label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      placeholder="Max age"
-                      value={filterMaxAge}
-                      onChange={(e) => setFilterMaxAge(e.target.value ? parseInt(e.target.value) : "")}
-                      className="w-full bg-gray-900 border border-gray-700 rounded-md p-2 text-parchment focus:ring-1 focus:ring-amber-dram focus:border-amber-dram transition"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex justify-end">
-                  <button
-                    onClick={clearFilters}
-                    className="px-4 py-2 bg-gray-700 text-limestone rounded-lg hover:bg-gray-600 transition-colors"
-                  >
-                    Clear Filters
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Results */}
-          <div className="mb-4">
-            <p className="text-limestone">
-              Showing {filteredExperiences.length} of {allExperiences.length} experiences
+      {/* Header */}
+      <div className="flex-shrink-0 px-6 py-4 bg-aged-oak border-b border-gray-700">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="font-serif text-2xl font-semibold text-parchment">Whisky Collection</h1>
+            <p className="text-limestone text-sm mt-1">
+              {whiskies.length} {whiskies.length === 1 ? 'whisky' : 'whiskies'} in the collection
             </p>
           </div>
-
-          {/* Whisky Cards */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            {filteredExperiences.map((experience) => (
-              <WhiskyCard key={experience.id} experience={experience} isFromAnnex={isUserExperience(experience.id)} />
-            ))}
-          </div>
-
-          {filteredExperiences.length === 0 && (
-            <div className="text-center py-12">
-              <Wine className="h-12 w-12 text-limestone mx-auto mb-4" />
-              <p className="text-limestone text-lg">No whiskies found matching your criteria.</p>
-              <p className="text-limestone/70 text-sm mt-2">Try adjusting your search terms or filters.</p>
-            </div>
+          {user && (
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-amber-dram text-white font-semibold rounded-lg hover:bg-amber-600 transition-colors"
+            >
+              <Plus className="h-4 w-4" />
+              Add Whisky
+            </button>
           )}
         </div>
       </div>
-    </div>
-  );
-}
 
-interface WhiskyCardProps {
-  experience: WhiskyExperience;
-  isFromAnnex: boolean;
-}
-
-/**
- * Individual whisky card component
- * @param props - Component props
- * @returns WhiskyCard component
- */
-function WhiskyCard({ experience, isFromAnnex }: WhiskyCardProps) {
-  return (
-    <div className="bg-aged-oak border border-gray-700 rounded-lg p-6 hover:border-amber-dram/50 transition-colors">
-      <div className="flex justify-between items-start mb-4">
-        <div>
-          <h3 className="font-serif text-xl font-semibold text-parchment mb-1">{experience.whiskyDetails.name}</h3>
-          <p className="text-limestone text-sm">{experience.whiskyDetails.distillery}</p>
-        </div>
-        <div className="text-right">
-          <div className="text-sm text-limestone">
-            {typeof experience.whiskyDetails.age === "number"
-              ? `${experience.whiskyDetails.age} years`
-              : experience.whiskyDetails.age}
+      {/* Search and Filters */}
+      <div className="flex-shrink-0 p-6 border-b border-gray-700 dark:border-gray-700 border-light-border">
+        <div className="flex gap-4 mb-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-limestone" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search whiskies..."
+              className="w-full pl-10 pr-4 py-2 bg-gray-900 dark:bg-gray-900 bg-white border border-gray-700 dark:border-gray-700 border-light-border rounded-lg text-parchment dark:text-parchment text-light-text focus:ring-2 focus:ring-amber-dram focus:border-amber-dram"
+            />
           </div>
-          <div className="text-xs text-limestone/70">{experience.whiskyDetails.abv}% ABV</div>
-        </div>
-      </div>
-
-      <div className="space-y-3">
-        <div className="flex items-center gap-2">
-          <MapPin className="h-4 w-4 text-limestone" />
-          <span className="text-sm text-limestone">{experience.whiskyDetails.region}</span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Calendar className="h-4 w-4 text-limestone" />
-          <span className="text-sm text-limestone">{experience.experienceDate}</span>
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+                className={`px-4 py-2 rounded-lg border transition-colors ${
+                  showFilters || hasActiveFilters
+                    ? 'bg-amber-dram/10 border-amber-dram text-amber-dram'
+                    : 'bg-gray-900 dark:bg-gray-900 bg-white border-gray-700 dark:border-gray-700 border-light-border text-limestone dark:text-limestone text-light-text-secondary hover:border-gray-600 dark:hover:border-gray-600'
+                }`}
+          >
+            <Filter className="h-5 w-5" />
+          </button>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Percent className="h-4 w-4 text-limestone" />
-          <span className="text-sm text-limestone">{experience.whiskyDetails.caskType}</span>
-        </div>
-
-        <div>
-          <p className="text-sm text-limestone mb-2">Tasting Notes:</p>
-          <div className="flex flex-wrap gap-2">
-            {experience.whiskyDetails.tastingNotes.map((note, index) => (
-              <span key={index} className="px-2 py-1 bg-gray-700 text-limestone text-xs rounded-full">
-                {note}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        <div className="pt-3 border-t border-gray-700">
-          <p className="text-sm text-limestone italic">&ldquo;{experience.finalVerdict}&rdquo;</p>
-        </div>
-
-        <div className="flex justify-between items-center pt-2">
-          <div className="text-xs text-limestone/70">{experience.experienceLocation}</div>
-          <div className="text-xs">
-            {isFromAnnex ? (
-              <span className="text-amber-dram">Memory Annex</span>
-            ) : (
-              <span className="text-limestone/70">Core Memory</span>
+        {showFilters && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-900/50 rounded-lg">
+            <div>
+              <label className="block text-sm font-medium text-limestone mb-1">Country</label>
+              <select
+                value={filterCountry}
+                onChange={(e) => setFilterCountry(e.target.value)}
+                className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-parchment focus:ring-2 focus:ring-amber-dram"
+              >
+                <option value="">All Countries</option>
+                {uniqueCountries.map((country) => (
+                  <option key={country} value={country}>
+                    {country}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-limestone mb-1">Host</label>
+              <select
+                value={filterHost}
+                onChange={(e) => setFilterHost(e.target.value)}
+                className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-parchment focus:ring-2 focus:ring-amber-dram"
+              >
+                <option value="">All Hosts</option>
+                {uniqueHosts.map((host) => (
+                  <option key={host} value={host}>
+                    {host}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {hasActiveFilters && (
+              <div className="md:col-span-2">
+                <button
+                  onClick={clearFilters}
+                  className="px-4 py-2 text-sm text-limestone hover:text-parchment transition-colors"
+                >
+                  Clear filters
+                </button>
+              </div>
             )}
           </div>
-        </div>
+        )}
       </div>
+
+      {/* Whisky Grid */}
+      <div className="flex-1 overflow-y-auto p-6">
+        {filteredWhiskies.length === 0 ? (
+          <div className="text-center py-12">
+            <Wine className="h-16 w-16 text-limestone/50 mx-auto mb-4" />
+            <h2 className="font-serif text-xl font-semibold text-parchment mb-2">No Whiskies Found</h2>
+            <p className="text-limestone mb-6">
+              {hasActiveFilters ? 'Try adjusting your filters.' : 'No whiskies in the collection yet.'}
+            </p>
+            {user && !hasActiveFilters && (
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="px-4 py-2 bg-amber-dram text-white font-semibold rounded-lg hover:bg-amber-600 transition-colors"
+              >
+                Add Whisky
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            {filteredWhiskies.map((whisky) => (
+              <div
+                key={whisky.id}
+                className="bg-aged-oak dark:bg-aged-oak bg-light-surface border border-gray-700 dark:border-gray-700 border-light-border rounded-lg p-6 hover:border-amber-dram/50 transition-colors"
+              >
+                {/* Whisky Image */}
+                {whisky.images && whisky.images.length > 0 ? (
+                  <div className="mb-4 aspect-video bg-gray-900 dark:bg-gray-900 bg-gray-100 rounded-lg overflow-hidden">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={whisky.images[0]}
+                      alt={whisky.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="mb-4 aspect-video bg-gray-900 dark:bg-gray-900 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <ImageIcon className="h-12 w-12 text-limestone/30" />
+                  </div>
+                )}
+
+                {/* Whisky Details */}
+                <div className="mb-4">
+                  <h3 className="font-serif text-xl font-semibold text-parchment mb-2">{whisky.name}</h3>
+                  <div className="space-y-1 text-sm text-limestone">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4" />
+                      <span>{whisky.countryOfOrigin}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      <span>{new Date(whisky.eventDate).toLocaleDateString()}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Wine className="h-4 w-4" />
+                      <span>Host: {whisky.host}</span>
+                    </div>
+                    {whisky.age && (
+                      <div className="text-amber-dram">
+                        Age: {whisky.age} {typeof whisky.age === 'number' ? 'years' : ''}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Notes */}
+                {(whisky.aromaNotes || whisky.tasteNotes || whisky.finishNotes) && (
+                  <div className="mb-4 space-y-2 text-sm">
+                    {whisky.aromaNotes && (
+                      <div>
+                        <span className="font-medium text-limestone">Aroma: </span>
+                        <span className="text-parchment">{whisky.aromaNotes}</span>
+                      </div>
+                    )}
+                    {whisky.tasteNotes && (
+                      <div>
+                        <span className="font-medium text-limestone">Taste: </span>
+                        <span className="text-parchment">{whisky.tasteNotes}</span>
+                      </div>
+                    )}
+                    {whisky.finishNotes && (
+                      <div>
+                        <span className="font-medium text-limestone">Finish: </span>
+                        <span className="text-parchment">{whisky.finishNotes}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Description */}
+                {whisky.description && (
+                  <p className="text-sm text-limestone mb-4 line-clamp-2">{whisky.description}</p>
+                )}
+
+                {/* View Details Button */}
+                <button
+                  onClick={() => {
+                    // TODO: Navigate to whisky detail page
+                    alert(`Whisky detail for ${whisky.name} coming soon`);
+                  }}
+                  className="w-full mt-4 px-4 py-2 border border-gray-700 text-parchment rounded-lg hover:bg-gray-700/50 transition-colors text-sm"
+                >
+                  View Details
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <AddWhiskyModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onSuccess={() => {
+          fetchWhiskies();
+          setShowAddModal(false);
+        }}
+      />
     </div>
   );
 }

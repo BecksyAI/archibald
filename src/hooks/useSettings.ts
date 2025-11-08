@@ -3,7 +3,7 @@
  * Part of Archibald's Athenaeum - M2: Core Logic & Hooks
  */
 
-import { useCallback, useMemo, useEffect } from "react";
+import { useCallback, useMemo } from "react";
 import {
   useLocalStorage,
   deleteStorageKey,
@@ -125,7 +125,6 @@ export function useSettings() {
    */
   const isApiKeyConfigured = useMemo(() => {
     const result = settings.apiKey.trim().length > 0;
-    console.log("[useSettings] isApiKeyConfigured:", result, "API key length:", settings.apiKey.trim().length);
     return result;
   }, [settings.apiKey]);
 
@@ -135,26 +134,8 @@ export function useSettings() {
   const isConfigured = useMemo(() => {
     const validation = validateSettings();
     const result = validation.isValid && isApiKeyConfigured;
-    console.log(
-      "[useSettings] isConfigured:",
-      result,
-      "validation.isValid:",
-      validation.isValid,
-      "isApiKeyConfigured:",
-      isApiKeyConfigured
-    );
     return result;
   }, [validateSettings, isApiKeyConfigured]);
-
-  // Debug logging for settings changes
-  useEffect(() => {
-    console.log("[useSettings] Settings changed:", settings);
-  }, [settings]);
-
-  // Debug logging for isConfigured changes
-  useEffect(() => {
-    console.log("[useSettings] isConfigured changed:", isConfigured);
-  }, [isConfigured]);
 
   /**
    * Get provider-specific configuration

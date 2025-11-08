@@ -172,6 +172,7 @@ Remember: You are not a helpful assistant. You are A.I. Sterling, and you will r
           throw new Error(`Unsupported provider: ${settings.llmProvider}`);
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [settings.llmProvider, buildSystemPrompt]
   );
 
@@ -215,11 +216,6 @@ Remember: You are not a helpful assistant. You are A.I. Sterling, and you will r
           throw new Error(`Unsupported provider: ${settings.llmProvider}`);
         }
 
-        console.log(`[useChat] Sending request to ${settings.llmProvider}:`, {
-          url: config.apiUrl,
-          body: requestBody,
-        });
-
         const response = await fetch(config.apiUrl, {
           method: "POST",
           headers: config.headers,
@@ -228,12 +224,6 @@ Remember: You are not a helpful assistant. You are A.I. Sterling, and you will r
         });
 
         if (!response.ok) {
-          const errorText = await response.text();
-          console.error(`[useChat] API Error Response:`, {
-            status: response.status,
-            statusText: response.statusText,
-            body: errorText,
-          });
           throw new APIError(`API request failed: ${response.status} ${response.statusText}`, response.status);
         }
 

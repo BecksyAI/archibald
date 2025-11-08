@@ -52,8 +52,7 @@ export function useLocalStorage<T>(
         setStoredValue(parsedValue);
       }
       setIsHydrated(true);
-    } catch (err) {
-      console.error(`[useLocalStorage] Error hydrating key "${key}":`, err);
+    } catch {
       setIsHydrated(true);
     }
   }, [key, encrypt]); // Only run on mount and when key/encrypt changes
@@ -72,7 +71,6 @@ export function useLocalStorage<T>(
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to write to localStorage";
       setError(message);
-      console.error(`[useLocalStorage] Error writing key "${key}":`, err);
     }
   }, [key, storedValue, encrypt, isHydrated]);
 
@@ -92,7 +90,6 @@ export function useLocalStorage<T>(
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to clear localStorage";
       setError(message);
-      console.error(`[useLocalStorage] Error clearing key "${key}":`, err);
       throw new StorageError(message);
     }
   }, [key, initialValue]);
@@ -161,8 +158,7 @@ export function deleteStorageKey(key: string): boolean {
   try {
     window.localStorage.removeItem(key);
     return true;
-  } catch (error) {
-    console.error(`[deleteStorageKey] Error deleting key "${key}":`, error);
+  } catch {
     return false;
   }
 }
@@ -204,8 +200,7 @@ export function clearAllArchibaldData(): { clearedKeys: string[]; success: boole
     }
 
     return { clearedKeys, success: true };
-  } catch (error) {
-    console.error("[clearAllArchibaldData] Error clearing localStorage:", error);
+  } catch {
     return { clearedKeys, success: false };
   }
 }

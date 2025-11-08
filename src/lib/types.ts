@@ -63,6 +63,59 @@ export interface LocalStorageData {
 
 export type LocalStorageKey = keyof LocalStorageData;
 
+// Database types
+export interface User {
+  id: string;
+  username: string;
+  displayName: string;
+  role: 'user' | 'admin' | 'superadmin';
+  claimed?: boolean;
+  claimedAt?: string;
+}
+
+export interface Event {
+  id: string;
+  date: string;
+  host: string;
+  documented: boolean | 'TBD';
+  description?: string;
+  images: string[];
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WhiskyEntry {
+  id: string;
+  name: string;
+  eventId?: string;
+  eventDate: string;
+  host: string;
+  countryOfOrigin: string;
+  age?: number | string;
+  description?: string;
+  aromaNotes?: string;
+  tasteNotes?: string;
+  finishNotes?: string;
+  images: string[];
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Review {
+  id: string;
+  whiskyEntryId: string;
+  eventId: string;
+  participantName: string;
+  participantUserId?: string;
+  verdict: string;
+  notes?: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // Error types
 export class ArchibaldError extends Error {
   constructor(message: string, public code: string) {

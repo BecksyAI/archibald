@@ -6,10 +6,14 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { Menu } from "lucide-react";
 import { Sidebar } from "./Sidebar";
 import { WhiskyCollection } from "./WhiskyCollection";
 import { MemoryAnnexForm } from "./MemoryAnnexForm";
 import { ChatInterface } from "./ChatInterface";
+import { EventsPage } from "./EventsPage";
+import { AdminPage } from "./AdminPage";
+import { SuperAdminPage } from "./SuperAdminPage";
 import { useSettings } from "@/hooks/useSettings";
 
 interface LayoutProps {
@@ -27,30 +31,18 @@ export function Layout({ children, settingsVersion, onSettingsSave }: LayoutProp
   const { isConfigured, isHydrated } = useSettings();
   const [activeTab, setActiveTab] = useState("chat");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [forceRender, setForceRender] = useState(0);
-
-  // Debug logging for isConfigured changes
-  useEffect(() => {
-    console.log("[Layout] isConfigured changed:", isConfigured);
-  }, [isConfigured]);
-
-  // Debug logging for settingsVersion changes
-  useEffect(() => {
-    console.log("[Layout] settingsVersion changed:", settingsVersion);
-  }, [settingsVersion]);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Additional effect to ensure we get the latest state when it changes
   useEffect(() => {
     // This effect should run whenever the settings are updated
     // Force a re-render to ensure we're using the latest state
-    if (settingsVersion > 0) {
-      console.log("[Layout] Settings version updated, forcing re-render");
-      setForceRender((prev) => prev + 1);
-    }
+    // The effect itself will trigger a re-render when dependencies change
   }, [settingsVersion, isConfigured]);
 
   const toggleSidebar = () => {
     setSidebarCollapsed(!sidebarCollapsed);
+    setMobileMenuOpen(!mobileMenuOpen);
   };
 
   // Auto-collapse sidebar on mobile
@@ -77,44 +69,27 @@ export function Layout({ children, settingsVersion, onSettingsSave }: LayoutProp
   useEffect(() => {
     // This effect runs when settings are saved, forcing a re-render
     // of the entire layout with updated isConfigured state
-    console.log("[Layout] Forcing re-render due to settings save");
-
-    // Force a re-render to ensure we get the latest state
-    setForceRender((prev) => prev + 1);
-
-    // Also force a re-render after a small delay to ensure state propagation
-    const timeoutId = setTimeout(() => {
-      setForceRender((prev) => prev + 1);
-    }, 100);
-
-    return () => clearTimeout(timeoutId);
+    // The effect itself will trigger a re-render when dependencies change
   }, [settingsVersion]);
 
   const renderContent = () => {
-    console.log(
-      "[Layout] Rendering content for activeTab:",
-      activeTab,
-      "isConfigured:",
-      isConfigured,
-      "forceRender:",
-      forceRender
-    );
     switch (activeTab) {
       case "collection":
         return <WhiskyCollection className="flex-1" />;
+      case "events":
+        return <EventsPage className="flex-1" />;
       case "memory-annex":
         return <MemoryAnnexForm className="flex-1" />;
+      case "admin":
+        return <AdminPage className="flex-1" />;
+      case "superadmin":
+        return <SuperAdminPage className="flex-1" />;
       case "chat":
       default:
         // Always pass the current isConfigured state and settingsVersion to force re-renders
         return (
           children || (
-            <ChatInterface
-              className="flex-1"
-              isConfigured={isConfigured}
-              settingsVersion={settingsVersion}
-              key={`chat-${settingsVersion}-${forceRender}`} // Force ChatInterface to re-mount when state changes
-            />
+            <ChatInterface className="flex-1" />
           )
         );
     }
@@ -132,18 +107,31 @@ export function Layout({ children, settingsVersion, onSettingsSave }: LayoutProp
     );
   }
 
-  console.log("[Layout] Rendering Layout with isConfigured:", isConfigured);
-
   return (
-    <div className="flex h-screen w-full bg-peat-smoke text-parchment">
+    <div className="flex h-screen w-full bg-peat-smoke dark:bg-peat-smoke bg-light-bg text-parchment dark:text-parchment text-light-text">
       <Sidebar
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={(tab) => {
+          setActiveTab(tab);
+          setMobileMenuOpen(false);
+        }}
         isCollapsed={sidebarCollapsed}
         onToggleCollapse={toggleSidebar}
         onSettingsSave={onSettingsSave} // Pass down the handler
+        mobileMenuOpen={mobileMenuOpen}
       />
-      <main className="flex-1 flex flex-col overflow-hidden">{renderContent()}</main>
+      <main className="flex-1 flex flex-col overflow-hidden min-w-0 w-full md:w-auto">
+        {!mobileMenuOpen && (
+          <button
+            onClick={toggleSidebar}
+            className="md:hidden fixed top-4 left-4 z-30 p-2 bg-aged-oak dark:bg-aged-oak bg-light-surface border border-gray-700 dark:border-gray-700 border-light-border rounded-lg text-limestone hover:text-parchment transition-colors"
+            aria-label="Open menu"
+          >
+            <Menu className="h-6 w-6" />
+          </button>
+        )}
+        {renderContent()}
+      </main>
     </div>
   );
 }

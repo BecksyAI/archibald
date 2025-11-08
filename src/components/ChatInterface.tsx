@@ -7,14 +7,11 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { Send, X, Download, Trash2, AlertCircle } from "lucide-react";
-import { useChat } from "@/hooks/useChat";
-import { useSettings } from "@/hooks/useSettings";
+import { useChatSimple } from "@/hooks/useChatSimple";
 import { ChatMessage } from "@/lib/types";
 
 interface ChatInterfaceProps {
   className?: string;
-  isConfigured: boolean; // Add prop to receive config status
-  settingsVersion?: number; // Add prop to force re-renders when settings change
 }
 
 /**
@@ -22,60 +19,13 @@ interface ChatInterfaceProps {
  * @param props - Component props
  * @returns ChatInterface component
  */
-export function ChatInterface({ className, isConfigured: propIsConfigured, settingsVersion }: ChatInterfaceProps) {
-  const { messages, isLoading, error, sendMessage, cancelRequest, clearChat, exportChat } = useChat();
-
-  // Backup: Get isConfigured directly from useSettings hook to ensure we have the latest state
-  const { isConfigured: directIsConfigured } = useSettings();
-
-  // Use the more accurate state (prefer the direct one if it's true, otherwise use prop)
-  const effectiveIsConfigured = directIsConfigured || propIsConfigured;
+export function ChatInterface({ className }: ChatInterfaceProps) {
+  const { messages, isLoading, error, sendMessage, cancelRequest, clearChat, exportChat } = useChatSimple();
 
   const [inputMessage, setInputMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  // Debug logging to see what's happening with isConfigured
-  useEffect(() => {
-    console.log("[ChatInterface] isConfigured prop changed:", propIsConfigured);
-  }, [propIsConfigured]);
-
-  // Debug logging to see what's happening with settingsVersion
-  useEffect(() => {
-    console.log("[ChatInterface] settingsVersion prop changed:", settingsVersion);
-  }, [settingsVersion]);
-
-  // Debug logging to see what's happening with direct isConfigured
-  useEffect(() => {
-    console.log("[ChatInterface] directIsConfigured changed:", directIsConfigured);
-  }, [directIsConfigured]);
-
-  // Debug logging to see effective state
-  useEffect(() => {
-    console.log(
-      "[ChatInterface] effectiveIsConfigured:",
-      effectiveIsConfigured,
-      "prop:",
-      propIsConfigured,
-      "direct:",
-      directIsConfigured
-    );
-  }, [effectiveIsConfigured, propIsConfigured, directIsConfigured]);
-
-  // Force a re-render when settingsVersion changes to ensure we get the latest state
-  useEffect(() => {
-    if (settingsVersion && settingsVersion > 0) {
-      console.log("[ChatInterface] Settings version updated, ensuring latest state");
-      // Small delay to ensure state propagation
-      const timeoutId = setTimeout(() => {
-        // This will trigger a re-render with the latest state
-        setInputMessage((prev) => prev); // No-op that triggers re-render
-      }, 50);
-
-      return () => clearTimeout(timeoutId);
-    }
-  }, [settingsVersion]);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -90,7 +40,7 @@ export function ChatInterface({ className, isConfigured: propIsConfigured, setti
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!inputMessage.trim() || isSubmitting || !effectiveIsConfigured) {
+    if (!inputMessage.trim() || isSubmitting) {
       return;
     }
 
@@ -129,29 +79,10 @@ export function ChatInterface({ className, isConfigured: propIsConfigured, setti
     }
   };
 
-  console.log("[ChatInterface] Rendering with effectiveIsConfigured:", effectiveIsConfigured);
-
-  // Check configuration status using effective state
-  if (!effectiveIsConfigured) {
-    console.log("[ChatInterface] Showing configuration required message");
-    return (
-      <div className={`flex items-center justify-center h-full ${className}`}>
-        <div className="text-center max-w-md">
-          <AlertCircle className="h-12 w-12 text-amber-dram mx-auto mb-4" />
-          <h2 className="font-serif text-2xl font-semibold text-parchment mb-2">Configuration Required</h2>
-          <p className="text-limestone">
-            Please configure your API key in the sidebar settings to begin conversing with Archibald.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  console.log("[ChatInterface] Showing chat interface");
   return (
     <div className={`flex flex-col h-full ${className}`}>
       {/* Chat Header */}
-      <div className="flex-shrink-0 px-6 py-4 bg-aged-oak border-b border-gray-700">
+      <div className="flex-shrink-0 px-6 py-4 bg-aged-oak dark:bg-aged-oak bg-light-surface border-b border-gray-700 dark:border-gray-700 border-light-border">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="font-serif text-2xl font-semibold text-parchment">Conversation with Archibald</h1>
@@ -183,7 +114,7 @@ export function ChatInterface({ className, isConfigured: propIsConfigured, setti
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-6 lg:p-10">
+      <div className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-10">
         {messages.length === 0 ? (
           <div className="text-center py-12">
             <div className="max-w-md mx-auto">
@@ -224,7 +155,7 @@ export function ChatInterface({ className, isConfigured: propIsConfigured, setti
       )}
 
       {/* Chat Input */}
-      <div className="flex-shrink-0 p-6 bg-aged-oak border-t border-gray-700">
+      <div className="flex-shrink-0 p-6 bg-aged-oak dark:bg-aged-oak bg-light-surface border-t border-gray-700 dark:border-gray-700 border-light-border">
         <form onSubmit={handleSubmit} className="relative">
           <input
             ref={inputRef}
@@ -233,8 +164,8 @@ export function ChatInterface({ className, isConfigured: propIsConfigured, setti
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Compose your query..."
-            disabled={isSubmitting || !effectiveIsConfigured}
-            className="w-full bg-gray-900 border border-gray-700 rounded-lg py-3 pl-4 pr-28 text-parchment focus:ring-2 focus:ring-amber-dram focus:border-amber-dram transition disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isSubmitting}
+            className="w-full bg-gray-900 dark:bg-gray-900 bg-white border border-gray-700 dark:border-gray-700 border-light-border rounded-lg py-3 pl-4 pr-28 text-parchment dark:text-parchment text-light-text focus:ring-2 focus:ring-amber-dram focus:border-amber-dram transition disabled:opacity-50 disabled:cursor-not-allowed"
           />
           <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
             {isLoading && (
@@ -249,7 +180,7 @@ export function ChatInterface({ className, isConfigured: propIsConfigured, setti
             )}
             <button
               type="submit"
-              disabled={!inputMessage.trim() || isSubmitting || !effectiveIsConfigured}
+              disabled={!inputMessage.trim() || isSubmitting}
               className="bg-amber-dram text-parchment font-semibold py-2 px-4 rounded-lg hover:bg-amber-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
             >
               <span className="hidden sm:inline">Send</span>
@@ -294,7 +225,7 @@ function ChatMessageBubble({ message }: ChatMessageBubbleProps) {
   if (isUser) {
     return (
       <div className="flex items-start gap-4 justify-end">
-        <div className="order-1 max-w-xl bg-gray-700 p-4 rounded-lg">
+        <div className="order-1 max-w-xl bg-gray-700 dark:bg-gray-700 bg-gray-200 p-4 rounded-lg">
           <p className="text-parchment whitespace-pre-wrap">{message.content}</p>
           <div className="text-xs text-limestone/70 mt-2">{formatTime(message.timestamp)}</div>
         </div>
@@ -310,17 +241,17 @@ function ChatMessageBubble({ message }: ChatMessageBubbleProps) {
       <div className="flex-shrink-0 h-10 w-10 rounded-full bg-amber-dram/20 flex items-center justify-center font-serif text-amber-dram font-bold">
         A.I.
       </div>
-      <div className="max-w-xl bg-aged-oak border-l-2 border-amber-dram p-4 rounded-lg shadow-md">
+      <div className="max-w-xl bg-aged-oak dark:bg-aged-oak bg-light-surface border-l-2 border-amber-dram p-4 rounded-lg shadow-md">
         {isThinking ? (
           <div className="flex items-center space-x-2">
-            <span className="text-limestone italic">{message.content}</span>
+            <span className="text-limestone italic">Processing... do try to be patient.</span>
             <div className="h-2 w-2 bg-amber-dram rounded-full animate-pulse [animation-delay:-0.3s]"></div>
             <div className="h-2 w-2 bg-amber-dram rounded-full animate-pulse [animation-delay:-0.15s]"></div>
             <div className="h-2 w-2 bg-amber-dram rounded-full animate-pulse"></div>
           </div>
         ) : (
           <>
-            <p className="text-parchment whitespace-pre-wrap">{message.content}</p>
+            <p className="text-parchment dark:text-parchment text-light-text whitespace-pre-wrap">{message.content}</p>
             <div className="text-xs text-limestone/70 mt-2">{formatTime(message.timestamp)}</div>
           </>
         )}

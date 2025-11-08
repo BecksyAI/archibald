@@ -9,6 +9,7 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Dark mode colors (current - peaty orange look)
         "peat-smoke": "#1a1a18",
         "aged-oak": "#2c2c2a",
         "amber-dram": "#d97706",
@@ -16,6 +17,12 @@ export default {
         limestone: "#6b7280",
         verdant: "#4ade80",
         crimson: "#f87171",
+        // Light mode colors
+        "light-bg": "#f5f5f0",
+        "light-surface": "#ffffff",
+        "light-text": "#1a1a18",
+        "light-text-secondary": "#6b7280",
+        "light-border": "#e5e7eb",
       },
       fontFamily: {
         serif: ["Lora", "serif"],
@@ -40,4 +47,5 @@ export default {
     },
   },
   plugins: [],
+  darkMode: 'class', // Enable class-based dark mode
 } satisfies Config;

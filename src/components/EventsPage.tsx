@@ -6,16 +6,23 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Calendar, Image as ImageIcon, Plus } from 'lucide-react';
+import { Calendar, Image as ImageIcon, Plus, LogIn } from 'lucide-react';
 import { Event } from '@/lib/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { AddEventModal } from './AddEventModal';
+import { EventDetailsModal } from './EventDetailsModal';
+import { LoginModal } from './LoginModal';
+import { RegisterModal } from './RegisterModal';
 
 export function EventsPage({ className }: { className?: string }) {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
+  const [showRegister, setShowRegister] = useState(false);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -69,7 +76,7 @@ export function EventsPage({ className }: { className?: string }) {
   return (
     <div className={`flex flex-col h-full ${className}`}>
       {/* Header */}
-      <div className="flex-shrink-0 px-6 py-4 bg-aged-oak dark:bg-aged-oak bg-light-surface border-b border-gray-700 dark:border-gray-700 border-light-border">
+      <div className="flex-shrink-0 px-6 py-4 bg-aged-oak dark:bg-aged-oak bg-light-surface border-b border-gray-700 dark:border-gray-700 border-light-border md:pl-6 pl-20">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="font-serif text-2xl font-semibold text-parchment">Whisky Events</h1>
@@ -77,13 +84,23 @@ export function EventsPage({ className }: { className?: string }) {
               {events.length} {events.length === 1 ? 'event' : 'events'} recorded
             </p>
           </div>
-          {user && (
+          {user ? (
             <button
               onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-amber-dram text-white font-semibold rounded-lg hover:bg-amber-600 transition-colors"
+              className="flex items-center gap-1 md:gap-2 px-2 md:px-4 py-1.5 md:py-2 text-xs md:text-base bg-amber-dram text-white font-semibold rounded-lg hover:bg-amber-600 transition-colors"
             >
-              <Plus className="h-4 w-4" />
-              Add Event
+              <Plus className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="hidden sm:inline">Add Event</span>
+              <span className="sm:hidden">Add</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => setShowLogin(true)}
+              className="flex items-center gap-1 md:gap-2 px-2 md:px-4 py-1.5 md:py-2 text-xs md:text-sm text-amber-dram hover:text-amber-400 border border-amber-dram/50 rounded-lg hover:bg-amber-dram/10 transition-colors"
+            >
+              <LogIn className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="hidden sm:inline">Login to add event</span>
+              <span className="sm:hidden">Login</span>
             </button>
           )}
         </div>
@@ -154,8 +171,8 @@ export function EventsPage({ className }: { className?: string }) {
 
                 <button
                   onClick={() => {
-                    // TODO: Navigate to event detail page
-                    alert(`Event detail for ${event.host} coming soon`);
+                    setSelectedEvent(event);
+                    setShowDetailsModal(true);
                   }}
                   className="w-full mt-4 px-4 py-2 border border-gray-700 dark:border-gray-700 border-light-border text-parchment dark:text-parchment text-light-text rounded-lg hover:bg-gray-700/50 dark:hover:bg-gray-700/50 transition-colors text-sm"
                 >
@@ -173,6 +190,33 @@ export function EventsPage({ className }: { className?: string }) {
         onSuccess={() => {
           fetchEvents();
           setShowAddModal(false);
+        }}
+      />
+
+      <EventDetailsModal
+        isOpen={showDetailsModal}
+        onClose={() => {
+          setShowDetailsModal(false);
+          setSelectedEvent(null);
+        }}
+        event={selectedEvent}
+      />
+
+      <LoginModal
+        isOpen={showLogin}
+        onClose={() => setShowLogin(false)}
+        onSwitchToRegister={() => {
+          setShowLogin(false);
+          setShowRegister(true);
+        }}
+      />
+
+      <RegisterModal
+        isOpen={showRegister}
+        onClose={() => setShowRegister(false)}
+        onSwitchToLogin={() => {
+          setShowRegister(false);
+          setShowLogin(true);
         }}
       />
     </div>

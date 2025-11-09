@@ -6,9 +6,11 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Save, AlertCircle, CheckCircle } from "lucide-react";
+import { Save, AlertCircle, CheckCircle, Plus, X, LogIn } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Event } from "@/lib/types";
+import { LoginModal } from "./LoginModal";
+import { RegisterModal } from "./RegisterModal";
 
 interface MemoryAnnexFormProps {
   className?: string;
@@ -18,10 +20,14 @@ interface FormData {
   name: string;
   countryOfOrigin: string;
   age: string | number;
+  abv: string | number;
   description: string;
-  aromaNotes: string;
-  tasteNotes: string;
-  finishNotes: string;
+  tastingNotes: string[]; // Individual tasting notes
+  currentTastingNote: string; // Current input for tasting note
+  experienceDate: string;
+  experienceLocation: string;
+  narrative: string;
+  finalVerdict: string;
   eventId: string | null;
   eventDate: string;
   host: string;
@@ -32,10 +38,14 @@ const defaultFormData: FormData = {
   name: "",
   countryOfOrigin: "",
   age: "",
+  abv: "",
   description: "",
-  aromaNotes: "",
-  tasteNotes: "",
-  finishNotes: "",
+  tastingNotes: [],
+  currentTastingNote: "",
+  experienceDate: "",
+  experienceLocation: "",
+  narrative: "",
+  finalVerdict: "",
   eventId: null,
   eventDate: "",
   host: "",
@@ -183,10 +193,19 @@ export function MemoryAnnexForm({ className }: MemoryAnnexFormProps) {
             ? parseInt(formData.age) || formData.age
             : formData.age
           : undefined,
-        description: formData.description?.trim() || undefined,
-        aromaNotes: formData.aromaNotes?.trim() || undefined,
-        tasteNotes: formData.tasteNotes?.trim() || undefined,
-        finishNotes: formData.finishNotes?.trim() || undefined,
+        abv: formData.abv
+          ? typeof formData.abv === "string"
+            ? parseFloat(formData.abv) || undefined
+            : typeof formData.abv === "number"
+            ? formData.abv
+            : undefined
+          : undefined,
+        description: formData.finalVerdict?.trim() || formData.description?.trim() || undefined,
+        // Combine tasting notes into comma-separated strings for aroma, taste, finish
+        // For now, we'll put all tasting notes in tasteNotes
+        tasteNotes: formData.tastingNotes.length > 0 ? formData.tastingNotes.join(', ') : undefined,
+        aromaNotes: undefined,
+        finishNotes: undefined,
         eventDate: formData.eventDate,
         host: formData.host.trim(),
         images: [],
@@ -233,26 +252,54 @@ export function MemoryAnnexForm({ className }: MemoryAnnexFormProps) {
     setErrors({});
   };
 
+  const [showLogin, setShowLogin] = useState(false);
+  const [showRegister, setShowRegister] = useState(false);
+
   if (!user) {
     return (
-      <div className={`flex flex-col h-full items-center justify-center p-6 ${className}`}>
-        <div className="text-center">
-          <AlertCircle className="h-12 w-12 text-limestone mx-auto mb-4" />
-          <h2 className="font-serif text-xl font-semibold text-parchment mb-2">Login Required</h2>
-          <p className="text-limestone">Please log in to add whisky entries to the Memory Annex.</p>
+      <>
+        <div className={`flex flex-col h-full items-center justify-center p-6 ${className}`}>
+          <div className="text-center max-w-md">
+            <AlertCircle className="h-12 w-12 text-limestone mx-auto mb-4" />
+            <h2 className="font-serif text-xl font-semibold text-parchment mb-2">Login Required</h2>
+            <p className="text-limestone mb-6">Please log in to add whisky entries to the Memory Annex.</p>
+            <button
+              onClick={() => setShowLogin(true)}
+              className="flex items-center justify-center gap-2 px-6 py-3 bg-amber-dram text-white font-semibold rounded-lg hover:bg-amber-600 transition-colors mx-auto"
+            >
+              <LogIn className="h-5 w-5" />
+              Login
+            </button>
+          </div>
         </div>
-      </div>
+        <LoginModal
+          isOpen={showLogin}
+          onClose={() => setShowLogin(false)}
+          onSwitchToRegister={() => {
+            setShowLogin(false);
+            setShowRegister(true);
+          }}
+        />
+        <RegisterModal
+          isOpen={showRegister}
+          onClose={() => setShowRegister(false)}
+          onSwitchToLogin={() => {
+            setShowRegister(false);
+            setShowLogin(true);
+          }}
+        />
+      </>
     );
   }
 
   return (
     <div className={`flex flex-col h-full ${className}`}>
-      <div className="flex-shrink-0 p-6 lg:p-8 border-b border-gray-700 dark:border-gray-700 border-light-border">
+      <div className="flex-shrink-0 p-6 lg:p-8 border-b border-gray-700 dark:border-gray-700 border-light-border md:pl-6 pl-20">
         <h1 className="font-serif text-3xl font-semibold text-parchment dark:text-parchment text-light-text mb-2">
           Memory Annex
         </h1>
         <p className="text-limestone dark:text-limestone text-light-text-secondary mb-4">
-          Add your personal whisky experiences to my collection. I shall judge them accordingly.
+          Add your personal experience to the collective.
         </p>
       </div>
 
@@ -436,6 +483,23 @@ export function MemoryAnnexForm({ className }: MemoryAnnexFormProps) {
                     placeholder="e.g., 16 or NAS"
                   />
                 </div>
+                <div>
+                  <label
+                    htmlFor="abv"
+                    className="block text-sm font-medium text-limestone dark:text-limestone text-light-text-secondary mb-1"
+                  >
+                    ABV (%)
+                  </label>
+                  <input
+                    id="abv"
+                    type="number"
+                    step="0.1"
+                    value={formData.abv}
+                    onChange={(e) => updateFormData("abv", e.target.value)}
+                    className="w-full bg-gray-900 dark:bg-gray-900 bg-white border border-gray-700 dark:border-gray-700 border-light-border rounded-md p-2 text-parchment dark:text-parchment text-light-text focus:ring-1 focus:ring-amber-dram focus:border-amber-dram transition"
+                    placeholder="e.g., 43.0"
+                  />
+                </div>
               </div>
 
               <div className="mt-4">
@@ -455,55 +519,152 @@ export function MemoryAnnexForm({ className }: MemoryAnnexFormProps) {
                 />
               </div>
 
-              <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="mt-4">
+                <label
+                  htmlFor="tastingNotes"
+                  className="block text-sm font-medium text-limestone dark:text-limestone text-light-text-secondary mb-2"
+                >
+                  Tasting Notes *
+                </label>
+                <div className="flex gap-2 mb-3">
+                  <input
+                    id="tastingNotes"
+                    type="text"
+                    value={formData.currentTastingNote}
+                    onChange={(e) => updateFormData("currentTastingNote", e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && formData.currentTastingNote.trim()) {
+                        e.preventDefault();
+                        const newNote = formData.currentTastingNote.trim();
+                        if (!formData.tastingNotes.includes(newNote)) {
+                          setFormData((prev) => ({
+                            ...prev,
+                            tastingNotes: [...prev.tastingNotes, newNote],
+                            currentTastingNote: '',
+                          }));
+                        }
+                      }
+                    }}
+                    className="flex-1 bg-gray-900 dark:bg-gray-900 bg-white border border-gray-700 dark:border-gray-700 border-light-border rounded-md p-2 text-parchment dark:text-parchment text-light-text focus:ring-1 focus:ring-amber-dram focus:border-amber-dram transition"
+                    placeholder="e.g., Smoky, Peaty, Honey"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newNote = formData.currentTastingNote.trim();
+                      if (newNote && !formData.tastingNotes.includes(newNote)) {
+                        setFormData((prev) => ({
+                          ...prev,
+                          tastingNotes: [...prev.tastingNotes, newNote],
+                          currentTastingNote: '',
+                        }));
+                      }
+                    }}
+                    className="px-4 py-2 bg-amber-dram text-white rounded-lg hover:bg-amber-600 transition-colors flex items-center gap-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add
+                  </button>
+                </div>
+                {formData.tastingNotes.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {formData.tastingNotes.map((note, index) => (
+                      <span
+                        key={index}
+                        className="inline-flex items-center gap-2 px-3 py-1 bg-amber-dram/20 text-amber-dram rounded-full text-sm border border-amber-dram/30"
+                      >
+                        {note}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormData((prev) => ({
+                              ...prev,
+                              tastingNotes: prev.tastingNotes.filter((_, i) => i !== index),
+                            }));
+                          }}
+                          className="hover:text-red-400 transition-colors"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Experience Details Section */}
+            <div className="bg-aged-oak dark:bg-aged-oak bg-light-surface border border-gray-700 dark:border-gray-700 border-light-border rounded-lg p-6">
+              <h2 className="font-serif text-xl font-semibold text-parchment dark:text-parchment text-light-text mb-4">
+                Experience Details
+              </h2>
+
+              <div className="space-y-4">
                 <div>
                   <label
-                    htmlFor="aromaNotes"
+                    htmlFor="experienceDate"
                     className="block text-sm font-medium text-limestone dark:text-limestone text-light-text-secondary mb-1"
                   >
-                    Aroma Notes
+                    Experience Date *
                   </label>
-                  <textarea
-                    id="aromaNotes"
-                    rows={3}
-                    value={formData.aromaNotes}
-                    onChange={(e) => updateFormData("aromaNotes", e.target.value)}
+                  <input
+                    id="experienceDate"
+                    type="text"
+                    value={formData.experienceDate}
+                    onChange={(e) => updateFormData("experienceDate", e.target.value)}
                     className="w-full bg-gray-900 dark:bg-gray-900 bg-white border border-gray-700 dark:border-gray-700 border-light-border rounded-md p-2 text-parchment dark:text-parchment text-light-text focus:ring-1 focus:ring-amber-dram focus:border-amber-dram transition"
-                    placeholder="Aroma notes..."
+                    placeholder="e.g., A cold winter evening in December"
                   />
                 </div>
 
                 <div>
                   <label
-                    htmlFor="tasteNotes"
+                    htmlFor="experienceLocation"
                     className="block text-sm font-medium text-limestone dark:text-limestone text-light-text-secondary mb-1"
                   >
-                    Taste Notes
+                    Experience Location *
                   </label>
-                  <textarea
-                    id="tasteNotes"
-                    rows={3}
-                    value={formData.tasteNotes}
-                    onChange={(e) => updateFormData("tasteNotes", e.target.value)}
+                  <input
+                    id="experienceLocation"
+                    type="text"
+                    value={formData.experienceLocation}
+                    onChange={(e) => updateFormData("experienceLocation", e.target.value)}
                     className="w-full bg-gray-900 dark:bg-gray-900 bg-white border border-gray-700 dark:border-gray-700 border-light-border rounded-md p-2 text-parchment dark:text-parchment text-light-text focus:ring-1 focus:ring-amber-dram focus:border-amber-dram transition"
-                    placeholder="Taste notes..."
+                    placeholder="e.g., A cozy pub in Edinburgh"
                   />
                 </div>
 
                 <div>
                   <label
-                    htmlFor="finishNotes"
+                    htmlFor="narrative"
                     className="block text-sm font-medium text-limestone dark:text-limestone text-light-text-secondary mb-1"
                   >
-                    Finish Notes
+                    Narrative *
                   </label>
                   <textarea
-                    id="finishNotes"
-                    rows={3}
-                    value={formData.finishNotes}
-                    onChange={(e) => updateFormData("finishNotes", e.target.value)}
+                    id="narrative"
+                    rows={4}
+                    value={formData.narrative}
+                    onChange={(e) => updateFormData("narrative", e.target.value)}
                     className="w-full bg-gray-900 dark:bg-gray-900 bg-white border border-gray-700 dark:border-gray-700 border-light-border rounded-md p-2 text-parchment dark:text-parchment text-light-text focus:ring-1 focus:ring-amber-dram focus:border-amber-dram transition"
-                    placeholder="Finish notes..."
+                    placeholder="Tell the story of your experience with this whisky..."
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="finalVerdict"
+                    className="block text-sm font-medium text-limestone dark:text-limestone text-light-text-secondary mb-1"
+                  >
+                    Final Verdict *
+                  </label>
+                  <textarea
+                    id="finalVerdict"
+                    rows={3}
+                    value={formData.finalVerdict}
+                    onChange={(e) => updateFormData("finalVerdict", e.target.value)}
+                    className="w-full bg-gray-900 dark:bg-gray-900 bg-white border border-gray-700 dark:border-gray-700 border-light-border rounded-md p-2 text-parchment dark:text-parchment text-light-text focus:ring-1 focus:ring-amber-dram focus:border-amber-dram transition"
+                    placeholder="Your final thoughts on this whisky..."
                   />
                 </div>
               </div>

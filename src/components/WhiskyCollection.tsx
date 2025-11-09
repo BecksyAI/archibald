@@ -6,10 +6,13 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { Search, Filter, MapPin, Calendar, Wine, Plus, Image as ImageIcon } from "lucide-react";
+import { Search, Filter, MapPin, Calendar, Wine, Plus, Image as ImageIcon, LogIn } from "lucide-react";
 import { WhiskyEntry } from "@/lib/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { AddWhiskyModal } from "./AddWhiskyModal";
+import { WhiskyDetailsModal } from "./WhiskyDetailsModal";
+import { LoginModal } from "./LoginModal";
+import { RegisterModal } from "./RegisterModal";
 
 interface WhiskyCollectionProps {
   className?: string;
@@ -27,6 +30,10 @@ export function WhiskyCollection({ className }: WhiskyCollectionProps) {
   const [filterHost, setFilterHost] = useState<string>("");
   const [showFilters, setShowFilters] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedWhisky, setSelectedWhisky] = useState<WhiskyEntry | null>(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
+  const [showRegister, setShowRegister] = useState(false);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -70,13 +77,33 @@ export function WhiskyCollection({ className }: WhiskyCollectionProps) {
     return Array.from(hosts).sort();
   }, [whiskies]);
 
+  const uniqueRegions = useMemo(() => {
+    const regions = new Set(whiskies.map((w) => w.countryOfOrigin));
+    return Array.from(regions).sort();
+  }, [whiskies]);
+
+  const uniqueDistilleries = useMemo(() => {
+    // Extract distillery from name if possible, or use name as fallback
+    const distilleries = new Set(whiskies.map((w) => {
+      // Try to extract distillery name (usually first word before age/year)
+      const match = w.name.match(/^([^0-9]+?)(?:\s+\d+)?/);
+      return match ? match[1].trim() : w.name;
+    }));
+    return Array.from(distilleries).sort();
+  }, [whiskies]);
+
   const filteredWhiskies = useMemo(() => {
     return whiskies.filter((whisky) => {
+      const searchLower = searchQuery.toLowerCase();
       const matchesSearch =
         !searchQuery ||
-        whisky.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        whisky.countryOfOrigin.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        whisky.description?.toLowerCase().includes(searchQuery.toLowerCase());
+        whisky.name.toLowerCase().includes(searchLower) ||
+        whisky.countryOfOrigin.toLowerCase().includes(searchLower) ||
+        whisky.description?.toLowerCase().includes(searchLower) ||
+        whisky.aromaNotes?.toLowerCase().includes(searchLower) ||
+        whisky.tasteNotes?.toLowerCase().includes(searchLower) ||
+        whisky.finishNotes?.toLowerCase().includes(searchLower) ||
+        whisky.host.toLowerCase().includes(searchLower);
 
       const matchesCountry = !filterCountry || whisky.countryOfOrigin === filterCountry;
       const matchesHost = !filterHost || whisky.host === filterHost;
@@ -117,21 +144,31 @@ export function WhiskyCollection({ className }: WhiskyCollectionProps) {
   return (
     <div className={`flex flex-col h-full ${className}`}>
       {/* Header */}
-      <div className="flex-shrink-0 px-6 py-4 bg-aged-oak border-b border-gray-700">
+      <div className="flex-shrink-0 px-6 py-4 bg-aged-oak border-b border-gray-700 md:pl-6 pl-20">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="font-serif text-2xl font-semibold text-parchment">Whisky Collection</h1>
             <p className="text-limestone text-sm mt-1">
-              {whiskies.length} {whiskies.length === 1 ? 'whisky' : 'whiskies'} in the collection
+              {whiskies.length} {whiskies.length === 1 ? 'whisky' : 'whiskies'}, {uniqueRegions.length} {uniqueRegions.length === 1 ? 'region' : 'regions'}, {uniqueDistilleries.length} {uniqueDistilleries.length === 1 ? 'distillery' : 'distilleries'}
             </p>
           </div>
-          {user && (
+          {user ? (
             <button
               onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-amber-dram text-white font-semibold rounded-lg hover:bg-amber-600 transition-colors"
+              className="flex items-center gap-1 md:gap-2 px-2 md:px-4 py-1.5 md:py-2 text-xs md:text-base bg-amber-dram text-white font-semibold rounded-lg hover:bg-amber-600 transition-colors"
             >
-              <Plus className="h-4 w-4" />
-              Add Whisky
+              <Plus className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="hidden sm:inline">Add Whisky</span>
+              <span className="sm:hidden">Add</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => setShowLogin(true)}
+              className="flex items-center gap-1 md:gap-2 px-2 md:px-4 py-1.5 md:py-2 text-xs md:text-sm text-amber-dram hover:text-amber-400 border border-amber-dram/50 rounded-lg hover:bg-amber-dram/10 transition-colors"
+            >
+              <LogIn className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="hidden sm:inline">Login to add whisky</span>
+              <span className="sm:hidden">Login</span>
             </button>
           )}
         </div>
@@ -146,7 +183,7 @@ export function WhiskyCollection({ className }: WhiskyCollectionProps) {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search whiskies..."
+              placeholder="Search whiskies, distilleries, regions, or tasting notes..."
               className="w-full pl-10 pr-4 py-2 bg-gray-900 dark:bg-gray-900 bg-white border border-gray-700 dark:border-gray-700 border-light-border rounded-lg text-parchment dark:text-parchment text-light-text focus:ring-2 focus:ring-amber-dram focus:border-amber-dram"
             />
           </div>
@@ -251,7 +288,17 @@ export function WhiskyCollection({ className }: WhiskyCollectionProps) {
 
                 {/* Whisky Details */}
                 <div className="mb-4">
-                  <h3 className="font-serif text-xl font-semibold text-parchment mb-2">{whisky.name}</h3>
+                  <div className="flex items-start justify-between mb-2">
+                    <h3 className="font-serif text-xl font-semibold text-parchment">{whisky.name}</h3>
+                    <div className="text-right text-sm text-limestone">
+                      {whisky.age && (
+                        <div>{whisky.age} {typeof whisky.age === 'number' ? 'years' : ''}</div>
+                      )}
+                      {whisky.abv && (
+                        <div className="text-amber-dram">{whisky.abv}% ABV</div>
+                      )}
+                    </div>
+                  </div>
                   <div className="space-y-1 text-sm text-limestone">
                     <div className="flex items-center gap-2">
                       <MapPin className="h-4 w-4" />
@@ -265,48 +312,61 @@ export function WhiskyCollection({ className }: WhiskyCollectionProps) {
                       <Wine className="h-4 w-4" />
                       <span>Host: {whisky.host}</span>
                     </div>
-                    {whisky.age && (
-                      <div className="text-amber-dram">
-                        Age: {whisky.age} {typeof whisky.age === 'number' ? 'years' : ''}
-                      </div>
-                    )}
                   </div>
                 </div>
 
-                {/* Notes */}
+                {/* Tasting Notes as Tags */}
                 {(whisky.aromaNotes || whisky.tasteNotes || whisky.finishNotes) && (
-                  <div className="mb-4 space-y-2 text-sm">
-                    {whisky.aromaNotes && (
-                      <div>
-                        <span className="font-medium text-limestone">Aroma: </span>
-                        <span className="text-parchment">{whisky.aromaNotes}</span>
-                      </div>
-                    )}
-                    {whisky.tasteNotes && (
-                      <div>
-                        <span className="font-medium text-limestone">Taste: </span>
-                        <span className="text-parchment">{whisky.tasteNotes}</span>
-                      </div>
-                    )}
-                    {whisky.finishNotes && (
-                      <div>
-                        <span className="font-medium text-limestone">Finish: </span>
-                        <span className="text-parchment">{whisky.finishNotes}</span>
-                      </div>
-                    )}
+                  <div className="mb-4">
+                    <h4 className="font-semibold text-parchment mb-2 text-sm">Tasting Notes:</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {whisky.aromaNotes && whisky.aromaNotes.split(',').map((note, index) => {
+                        const trimmedNote = note.trim();
+                        return trimmedNote ? (
+                          <span
+                            key={`aroma-${index}`}
+                            className="px-3 py-1 bg-amber-dram/20 text-amber-dram rounded-full text-sm border border-amber-dram/30"
+                          >
+                            {trimmedNote}
+                          </span>
+                        ) : null;
+                      })}
+                      {whisky.tasteNotes && whisky.tasteNotes.split(',').map((note, index) => {
+                        const trimmedNote = note.trim();
+                        return trimmedNote ? (
+                          <span
+                            key={`taste-${index}`}
+                            className="px-3 py-1 bg-amber-dram/20 text-amber-dram rounded-full text-sm border border-amber-dram/30"
+                          >
+                            {trimmedNote}
+                          </span>
+                        ) : null;
+                      })}
+                      {whisky.finishNotes && whisky.finishNotes.split(',').map((note, index) => {
+                        const trimmedNote = note.trim();
+                        return trimmedNote ? (
+                          <span
+                            key={`finish-${index}`}
+                            className="px-3 py-1 bg-amber-dram/20 text-amber-dram rounded-full text-sm border border-amber-dram/30"
+                          >
+                            {trimmedNote}
+                          </span>
+                        ) : null;
+                      })}
+                    </div>
                   </div>
                 )}
 
-                {/* Description */}
+                {/* Description / One-line */}
                 {whisky.description && (
-                  <p className="text-sm text-limestone mb-4 line-clamp-2">{whisky.description}</p>
+                  <p className="text-sm text-parchment italic mb-4 line-clamp-2">{whisky.description}</p>
                 )}
 
                 {/* View Details Button */}
                 <button
                   onClick={() => {
-                    // TODO: Navigate to whisky detail page
-                    alert(`Whisky detail for ${whisky.name} coming soon`);
+                    setSelectedWhisky(whisky);
+                    setShowDetailsModal(true);
                   }}
                   className="w-full mt-4 px-4 py-2 border border-gray-700 text-parchment rounded-lg hover:bg-gray-700/50 transition-colors text-sm"
                 >
@@ -324,6 +384,33 @@ export function WhiskyCollection({ className }: WhiskyCollectionProps) {
         onSuccess={() => {
           fetchWhiskies();
           setShowAddModal(false);
+        }}
+      />
+
+      <WhiskyDetailsModal
+        isOpen={showDetailsModal}
+        onClose={() => {
+          setShowDetailsModal(false);
+          setSelectedWhisky(null);
+        }}
+        whisky={selectedWhisky}
+      />
+
+      <LoginModal
+        isOpen={showLogin}
+        onClose={() => setShowLogin(false)}
+        onSwitchToRegister={() => {
+          setShowLogin(false);
+          setShowRegister(true);
+        }}
+      />
+
+      <RegisterModal
+        isOpen={showRegister}
+        onClose={() => setShowRegister(false)}
+        onSwitchToLogin={() => {
+          setShowRegister(false);
+          setShowLogin(true);
         }}
       />
     </div>

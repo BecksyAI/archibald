@@ -14,6 +14,7 @@ import { ChatInterface } from "./ChatInterface";
 import { EventsPage } from "./EventsPage";
 import { AdminPage } from "./AdminPage";
 import { SuperAdminPage } from "./SuperAdminPage";
+import { SuggestionsPage } from "./SuggestionsPage";
 import { useSettings } from "@/hooks/useSettings";
 
 interface LayoutProps {
@@ -41,8 +42,17 @@ export function Layout({ children, settingsVersion, onSettingsSave }: LayoutProp
   }, [settingsVersion, isConfigured]);
 
   const toggleSidebar = () => {
-    setSidebarCollapsed(!sidebarCollapsed);
-    setMobileMenuOpen(!mobileMenuOpen);
+    if (window.innerWidth < 768) {
+      // On mobile, toggle the mobile menu
+      setMobileMenuOpen((prev) => {
+        const newValue = !prev;
+        setSidebarCollapsed(!newValue); // When menu is open, sidebar is not collapsed
+        return newValue;
+      });
+    } else {
+      // On desktop, toggle collapse
+      setSidebarCollapsed(!sidebarCollapsed);
+    }
   };
 
   // Auto-collapse sidebar on mobile
@@ -50,8 +60,10 @@ export function Layout({ children, settingsVersion, onSettingsSave }: LayoutProp
     const handleResize = () => {
       if (window.innerWidth < 768) {
         setSidebarCollapsed(true);
+        // Don't auto-close mobile menu on resize, let user control it
       } else {
         setSidebarCollapsed(false);
+        setMobileMenuOpen(false);
       }
     };
 
@@ -82,6 +94,8 @@ export function Layout({ children, settingsVersion, onSettingsSave }: LayoutProp
         return <MemoryAnnexForm className="flex-1" />;
       case "admin":
         return <AdminPage className="flex-1" />;
+      case "suggestions":
+        return <SuggestionsPage className="flex-1" />;
       case "superadmin":
         return <SuperAdminPage className="flex-1" />;
       case "chat":
@@ -113,7 +127,11 @@ export function Layout({ children, settingsVersion, onSettingsSave }: LayoutProp
         activeTab={activeTab}
         onTabChange={(tab) => {
           setActiveTab(tab);
-          setMobileMenuOpen(false);
+          // Only close mobile menu on mobile, not on desktop
+          if (window.innerWidth < 768) {
+            setMobileMenuOpen(false);
+            setSidebarCollapsed(true);
+          }
         }}
         isCollapsed={sidebarCollapsed}
         onToggleCollapse={toggleSidebar}
@@ -121,10 +139,11 @@ export function Layout({ children, settingsVersion, onSettingsSave }: LayoutProp
         mobileMenuOpen={mobileMenuOpen}
       />
       <main className="flex-1 flex flex-col overflow-hidden min-w-0 w-full md:w-auto">
+        {/* Hamburger menu - always show on mobile when sidebar is closed */}
         {!mobileMenuOpen && (
           <button
             onClick={toggleSidebar}
-            className="md:hidden fixed top-4 left-4 z-30 p-2 bg-aged-oak dark:bg-aged-oak bg-light-surface border border-gray-700 dark:border-gray-700 border-light-border rounded-lg text-limestone hover:text-parchment transition-colors"
+            className="md:hidden fixed top-4 left-4 z-50 p-2 bg-aged-oak dark:bg-aged-oak bg-light-surface border border-gray-700 dark:border-gray-700 border-light-border rounded-lg text-limestone hover:text-parchment transition-colors"
             aria-label="Open menu"
           >
             <Menu className="h-6 w-6" />

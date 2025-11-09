@@ -22,6 +22,7 @@ export function AddWhiskyModal({ isOpen, onClose, onSuccess }: AddWhiskyModalPro
     name: "",
     countryOfOrigin: "",
     age: "",
+    abv: "",
     description: "",
     aromaNotes: "",
     tasteNotes: "",
@@ -111,6 +112,10 @@ export function AddWhiskyModal({ isOpen, onClose, onSuccess }: AddWhiskyModalPro
         const ageNum = parseInt(formData.age);
         whiskyData.age = isNaN(ageNum) ? formData.age : ageNum;
       }
+      if (formData.abv) {
+        const abvNum = parseFloat(formData.abv);
+        whiskyData.abv = isNaN(abvNum) ? undefined : abvNum;
+      }
       if (formData.description) whiskyData.description = formData.description.trim();
       if (formData.aromaNotes) whiskyData.aromaNotes = formData.aromaNotes.trim();
       if (formData.tasteNotes) whiskyData.tasteNotes = formData.tasteNotes.trim();
@@ -136,6 +141,7 @@ export function AddWhiskyModal({ isOpen, onClose, onSuccess }: AddWhiskyModalPro
         name: "",
         countryOfOrigin: "",
         age: "",
+        abv: "",
         description: "",
         aromaNotes: "",
         tasteNotes: "",
@@ -156,8 +162,11 @@ export function AddWhiskyModal({ isOpen, onClose, onSuccess }: AddWhiskyModalPro
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white dark:bg-aged-oak rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
+      <div
+        className="bg-white dark:bg-aged-oak rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-serif text-2xl font-semibold text-gray-900 dark:text-parchment">Add Whisky</h2>
           <button
@@ -303,6 +312,20 @@ export function AddWhiskyModal({ isOpen, onClose, onSuccess }: AddWhiskyModalPro
                 value={formData.age}
                 onChange={(e) => setFormData({ ...formData, age: e.target.value })}
                 placeholder="e.g., 16 or NAS"
+                className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-parchment focus:ring-2 focus:ring-amber-dram focus:border-amber-dram"
+              />
+            </div>
+            <div>
+              <label htmlFor="abv" className="block text-sm font-medium text-gray-700 dark:text-limestone mb-1">
+                ABV (%)
+              </label>
+              <input
+                id="abv"
+                type="number"
+                step="0.1"
+                value={formData.abv}
+                onChange={(e) => setFormData({ ...formData, abv: e.target.value })}
+                placeholder="e.g., 43.0"
                 className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-parchment focus:ring-2 focus:ring-amber-dram focus:border-amber-dram"
               />
             </div>

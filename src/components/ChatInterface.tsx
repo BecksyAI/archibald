@@ -82,7 +82,7 @@ export function ChatInterface({ className }: ChatInterfaceProps) {
   return (
     <div className={`flex flex-col h-full ${className}`}>
       {/* Chat Header */}
-      <div className="flex-shrink-0 px-6 py-4 bg-aged-oak dark:bg-aged-oak bg-light-surface border-b border-gray-700 dark:border-gray-700 border-light-border">
+      <div className="flex-shrink-0 px-6 py-4 bg-aged-oak dark:bg-aged-oak bg-light-surface border-b border-gray-700 dark:border-gray-700 border-light-border md:pl-6 pl-20">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="font-serif text-2xl font-semibold text-parchment">Conversation with Archibald</h1>

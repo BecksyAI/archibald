@@ -80,7 +80,7 @@ export function AdminPage({ className }: { className?: string }) {
   return (
     <div className={`flex flex-col h-full ${className}`}>
       {/* Header */}
-      <div className="flex-shrink-0 px-6 py-4 bg-aged-oak dark:bg-aged-oak bg-light-surface border-b border-gray-700 dark:border-gray-700 border-light-border">
+      <div className="flex-shrink-0 px-6 py-4 bg-aged-oak dark:bg-aged-oak bg-light-surface border-b border-gray-700 dark:border-gray-700 border-light-border md:pl-6 pl-20">
         <div className="flex items-center gap-3">
           <Settings className="h-6 w-6 text-amber-dram" />
           <div>

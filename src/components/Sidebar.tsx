@@ -6,7 +6,7 @@
 "use client";
 
 import React from "react";
-import { MessageSquare, Library, FilePlus2, X, Menu, Calendar, Sun, Moon, Shield, Settings } from "lucide-react";
+import { MessageSquare, Library, FilePlus2, X, Menu, Calendar, Sun, Moon, Shield, Settings, MessageCircle } from "lucide-react";
 import { AuthButton } from "./AuthButton";
 import { MigrationButton } from "./MigrationButton";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -43,6 +43,7 @@ export function Sidebar({
     { id: "memory-annex", label: "Memory Annex", icon: FilePlus2 },
     ...(user && (user.role === 'admin' || user.role === 'superadmin') ? [
       { id: "admin", label: "Admin", icon: Settings },
+      { id: "suggestions", label: "Suggestions", icon: MessageCircle },
     ] : []),
     ...(user && user.role === 'superadmin' ? [
       { id: "superadmin", label: "Super Admin", icon: Shield },
@@ -50,8 +51,9 @@ export function Sidebar({
   ];
 
   if (isCollapsed) {
+    // On mobile, don't show collapsed sidebar - use floating button instead
     return (
-      <div className="w-16 flex-shrink-0 bg-aged-oak dark:bg-aged-oak bg-light-surface border-r border-gray-700 dark:border-gray-700 border-light-border flex flex-col">
+      <div className="hidden md:flex w-16 flex-shrink-0 bg-aged-oak dark:bg-aged-oak bg-light-surface border-r border-gray-700 dark:border-gray-700 border-light-border flex flex-col">
         <button onClick={onToggleCollapse} className="p-4 text-limestone hover:text-parchment transition-colors">
           <Menu className="h-6 w-6" />
         </button>
@@ -87,12 +89,12 @@ export function Sidebar({
           aria-hidden="true"
         />
       )}
-      <aside className={`${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 fixed md:static inset-y-0 left-0 z-50 w-80 flex-shrink-0 bg-aged-oak dark:bg-aged-oak bg-light-surface border-r border-gray-700 dark:border-gray-700 border-light-border p-4 md:p-6 flex flex-col justify-between transition-transform duration-300`}>
-        <div>
-          <header className="mb-10">
+      <aside className={`${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 fixed md:static inset-y-0 left-0 z-50 w-80 flex-shrink-0 bg-aged-oak dark:bg-aged-oak bg-light-surface border-r border-gray-700 dark:border-gray-700 border-light-border p-4 md:p-6 flex flex-col transition-transform duration-300 overflow-y-auto`}>
+        <div className="flex-1 flex flex-col min-h-0">
+          <header className="mb-6 md:mb-10 flex-shrink-0">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="font-serif text-3xl font-semibold text-parchment dark:text-parchment text-light-text">The Athenaeum</h1>
+                <h1 className="font-serif text-2xl md:text-3xl font-semibold text-parchment dark:text-parchment text-light-text">The Athenaeum</h1>
                 <p className="text-limestone text-sm mt-1">A private collection of spirits & data.</p>
               </div>
               {onToggleCollapse && (
@@ -107,7 +109,7 @@ export function Sidebar({
             </div>
           </header>
 
-          <nav className="flex flex-col space-y-2 mb-10">
+          <nav className="flex flex-col space-y-2 mb-6 md:mb-10 flex-1 min-h-0 overflow-y-auto">
             {navItems.map((item) => (
               <button
                 key={item.id}
@@ -128,7 +130,7 @@ export function Sidebar({
           </nav>
         </div>
 
-        <footer className="border-t border-gray-700 dark:border-gray-700 border-light-border pt-6">
+        <footer className="border-t border-gray-700 dark:border-gray-700 border-light-border pt-4 md:pt-6 flex-shrink-0">
           <div className="mb-4">
             <MigrationButton />
             <AuthButton />

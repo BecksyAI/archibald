@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Archibald's Athenaeum",
+  title: "The Athenaeum",
   description: "Your personal whisky companion",
 };
 
@@ -26,7 +26,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-peat-smoke dark:bg-peat-smoke bg-light-bg text-parchment dark:text-parchment text-light-text`}>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-peat-smoke dark:bg-peat-smoke bg-light-bg text-parchment dark:text-parchment text-light-text`}
+      >
         <ThemeProvider>
           <AuthProvider>{children}</AuthProvider>
         </ThemeProvider>

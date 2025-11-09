@@ -93,6 +93,7 @@ export interface WhiskyEntry {
   host: string;
   countryOfOrigin: string;
   age?: number | string;
+  abv?: number;
   description?: string;
   aromaNotes?: string;
   tasteNotes?: string;

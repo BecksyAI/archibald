@@ -5,6 +5,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import WhiskyEntry from "@/lib/models/WhiskyEntry";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import Event from "@/lib/models/Event"; // Import Event model to ensure it's registered for populate
 import { requireAuth, AuthenticatedRequest } from "@/lib/middleware";
 
 // GET all whisky entries
@@ -68,6 +70,7 @@ export async function GET(request: NextRequest) {
         host: whisky.host || "",
         countryOfOrigin: whisky.countryOfOrigin || "",
         age: whisky.age,
+        abv: whisky.abv,
         description: whisky.description,
         aromaNotes: whisky.aromaNotes,
         tasteNotes: whisky.tasteNotes,
@@ -119,6 +122,7 @@ async function createHandler(request: AuthenticatedRequest) {
       host: host.trim(),
       countryOfOrigin: countryOfOrigin.trim(),
       age,
+      abv: body.abv,
       description: description?.trim(),
       aromaNotes: aromaNotes?.trim(),
       tasteNotes: tasteNotes?.trim(),
@@ -135,6 +139,7 @@ async function createHandler(request: AuthenticatedRequest) {
       host: whisky.host,
       countryOfOrigin: whisky.countryOfOrigin,
       age: whisky.age,
+      abv: whisky.abv,
       description: whisky.description,
       aromaNotes: whisky.aromaNotes,
       tasteNotes: whisky.tasteNotes,

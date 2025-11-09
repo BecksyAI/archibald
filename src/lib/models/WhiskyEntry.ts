@@ -11,6 +11,7 @@ export interface IWhiskyEntry extends Document {
   host: string;
   countryOfOrigin: string;
   age?: number | string;
+  abv?: number;
   description?: string;
   aromaNotes?: string;
   tasteNotes?: string;
@@ -49,6 +50,9 @@ const WhiskyEntrySchema = new Schema<IWhiskyEntry>(
     },
     age: {
       type: Schema.Types.Mixed,
+    },
+    abv: {
+      type: Number,
     },
     description: {
       type: String,

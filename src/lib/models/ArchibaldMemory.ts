@@ -44,6 +44,7 @@ const ArchibaldMemorySchema = new Schema<IArchibaldMemory>(
       type: Number,
       required: true,
       unique: true,
+      index: true,
     },
     whiskyDetails: {
       type: WhiskyDetailsSchema,
@@ -71,7 +72,7 @@ const ArchibaldMemorySchema = new Schema<IArchibaldMemory>(
   }
 );
 
-ArchibaldMemorySchema.index({ id: 1 }, { unique: true });
+// Note: id index is created automatically by unique: true and index: true
 ArchibaldMemorySchema.index({ 'whiskyDetails.name': 1 });
 
 export default mongoose.models.ArchibaldMemory || mongoose.model<IArchibaldMemory>('ArchibaldMemory', ArchibaldMemorySchema);

@@ -7,7 +7,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, MapPin, Calendar, Wine, Image as ImageIcon } from 'lucide-react';
+import { X, MapPin, Calendar, Wine } from 'lucide-react';
 import { WhiskyEntry } from '@/lib/types';
 
 interface WhiskyDetailsModalProps {

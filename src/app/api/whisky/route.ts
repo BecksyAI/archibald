@@ -5,9 +5,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import WhiskyEntry from "@/lib/models/WhiskyEntry";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import Event from "@/lib/models/Event"; // Import Event model to ensure it's registered for populate
 import { requireAuth, AuthenticatedRequest } from "@/lib/middleware";
+
+// Import Event model to ensure it's registered for populate
+// This must be imported before any queries that use populate('eventId')
+import Event from "@/lib/models/Event";
 
 // GET all whisky entries
 export async function GET(request: NextRequest) {
@@ -29,6 +31,10 @@ export async function GET(request: NextRequest) {
     if (eventId) {
       query.eventId = eventId;
     }
+
+    // Ensure Event model is registered before populate
+    // Reference Event to ensure it's loaded (prevents "Schema hasn't been registered" error)
+    void Event;
 
     const whiskies = await WhiskyEntry.find(query).sort({ createdAt: -1 }).populate("eventId", "date host").lean();
 

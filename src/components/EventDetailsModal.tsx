@@ -7,7 +7,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Calendar, Image as ImageIcon, User } from 'lucide-react';
+import { X, Calendar, Image as ImageIcon } from 'lucide-react';
 import { Event } from '@/lib/types';
 
 interface EventDetailsModalProps {

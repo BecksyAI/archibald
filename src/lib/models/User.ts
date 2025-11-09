@@ -26,6 +26,7 @@ const UserSchema = new Schema<IUser>(
       lowercase: true,
       minlength: 3,
       maxlength: 30,
+      index: true,
     },
     password: {
       type: String,
@@ -62,8 +63,7 @@ const UserSchema = new Schema<IUser>(
   }
 );
 
-// Index for faster queries
-UserSchema.index({ username: 1 });
+// Note: username index is created automatically by unique: true and index: true
 
 export default mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
 

@@ -36,7 +36,6 @@ const ReviewSchema = new Schema<IReview>(
     participantUserId: {
       type: Schema.Types.ObjectId,
       ref: 'User',
-      sparse: true,
     },
     verdict: {
       type: String,
